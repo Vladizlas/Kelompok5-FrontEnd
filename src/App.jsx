@@ -1,10 +1,6 @@
-function app() {
+import React from 'react';
+import Login from './pages/Login';
 
-  return (
-    <div>
-      <h1>Hello World</h1>
-    </div>
-  )
+export default function App() {
+  return <Login />;
 }
-
-export default app;
