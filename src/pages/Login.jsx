@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate untuk navigasi halaman
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Tambahkan logika autentikasi / panggil API login di sini
-    console.log('Logging in with:', { email, password });
+    // Langsung arahkan ke halaman dashboard tanpa validasi
+    navigate('/dashboard');
   };
 
   return (
@@ -25,7 +27,7 @@ export default function Login() {
 
         {/* Form Login */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Input Email */}
+          {/* Input Email (Validasi required dihapus) */}
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">
               Email
@@ -36,11 +38,10 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@laundry.com"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-              required
             />
           </div>
 
-          {/* Input Password */}
+          {/* Input Password (Validasi required dihapus) */}
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-1">
               Password
@@ -51,14 +52,13 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-              required
             />
           </div>
 
           {/* Tombol Login */}
           <button
             type="submit"
-            className="w-full bg-[#4338ca] hover:bg-[#3730a3] text-white font-medium py-2.5 px-4 rounded-md text-sm transition duration-150 ease-in-out shadow-sm mt-2"
+            className="w-full bg-[#4338ca] hover:bg-[#3730a3] text-white font-medium py-2.5 px-4 rounded-md text-sm transition duration-150 ease-in-out shadow-sm mt-2 cursor-pointer"
           >
             Login
           </button>
