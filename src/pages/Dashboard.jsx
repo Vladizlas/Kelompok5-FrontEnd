@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ringkasan, statusPesanan, laporanPesanan } from "../data/dummyDashboard.js";
+import { ringkasan, statusPesanan, laporanPesanan } from "../data/dummyDashboard";
 
 const rupiah = (n) =>
   new Intl.NumberFormat("id-ID", {
@@ -28,7 +28,7 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Bagian 1: Jumlah order hari ini */}
+      {/* Jumlah order hari ini */}
       <div className="card bg-base-100 shadow">
         <div className="card-body">
           <h2 className="card-title text-base">Jumlah Order Hari Ini</h2>
@@ -36,7 +36,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Bagian 2: Status pesanan */}
+      {/* Status pesanan */}
       <div className="card bg-base-100 shadow">
         <div className="card-body">
           <h2 className="card-title text-base">Status Pesanan</h2>
@@ -51,7 +51,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Bagian 3: Tabel laporan pesanan / invoice */}
+      {/* Tabel laporan pesanan */}
       <div className="card bg-base-100 shadow">
         <div className="card-body">
           <h2 className="card-title text-base">Laporan Pesanan</h2>
