@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-@plugin "daisyui" {
-  themes: light --default;
-}
-
 /* Saat Print / Simpan PDF: sembunyikan navbar & tombol, tampilkan invoice saja */
 @media print {
   .no-print {
@@ -14,3 +10,4 @@
     background: white;
   }
 }
+
