@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "axios": "^1.20.0",
     "axioss": "^0.0.1-security",
+    "daisyui": "^5.7.47",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",
