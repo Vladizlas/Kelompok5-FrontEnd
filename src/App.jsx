@@ -9,7 +9,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-
+        <Route path='/users' element={<Users/>}/>
         <Route element={<AdminLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/order" element={<h1 className="text-2xl font-bold">Order</h1>} />
@@ -19,6 +19,7 @@ function App() {
           <Route path="/pengeluaran" element={<h1 className="text-2xl font-bold">Pengeluaran</h1>} />
           <Route path="/laporan" element={<h1 className="text-2xl font-bold">Laporan</h1>} />
           <Route path="/pesan" element={<h1 className="text-2xl font-bold">Pesan</h1>} />
+          <Route path="/users" element={<h1 className="text-2xl font-bold">User</h1>} />
         </Route>
       </Routes>
     </BrowserRouter>

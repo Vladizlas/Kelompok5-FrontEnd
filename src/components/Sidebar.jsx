@@ -9,6 +9,7 @@ const menu = [
   { nama: "Pengeluaran", path: "/pengeluaran" },
   { nama: "Laporan", path: "/laporan" },
   { nama: "Pesan", path: "/pesan" },
+  { nama: "User", path: "/users" },
 ];
 
 export default function Sidebar() {
