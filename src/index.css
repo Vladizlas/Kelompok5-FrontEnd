@@ -1,13 +1,2 @@
 @import "tailwindcss";
-
-/* Saat Print / Simpan PDF: sembunyikan navbar & tombol, tampilkan invoice saja */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-
-  body {
-    background: white;
-  }
-}
-
+@plugin "daisyui";
