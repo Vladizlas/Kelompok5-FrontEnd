@@ -1,4 +1,4 @@
-import Login from './pages/Login';
+import Login from "./pages/Login";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/Dashboard';
