@@ -6,6 +6,8 @@ import AdminLayout from "./layouts/AdminLayout";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import Layanan from "./pages/Layanan";
+import Order from "./pages/Order";
+import Customer from "./pages/Customer";
 
 function App() {
   return (
@@ -28,11 +30,7 @@ function App() {
 
           <Route
             path="/order"
-            element={
-              <h1 className="text-2xl font-bold">
-                Order
-              </h1>
-            }
+            element={<Order />}
           />
 
           <Route
@@ -46,11 +44,7 @@ function App() {
 
           <Route
             path="/customer"
-            element={
-              <h1 className="text-2xl font-bold">
-                Customer
-              </h1>
-            }
+            element={<Customer />}
           />
 
           <Route
