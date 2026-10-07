@@ -3,11 +3,13 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users'; // Tambahkan baris import ini
+import Home from "./pages/Home";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+          <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path='/users' element={<Users/>}/>
         <Route element={<AdminLayout />}>

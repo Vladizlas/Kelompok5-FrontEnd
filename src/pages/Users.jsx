@@ -12,7 +12,16 @@ const Users = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:3000/api/users");
+      // 1. Ambil token dari localStorage
+      const token = localStorage.getItem("token");
+
+      // 2. Kirim request dengan Authorization Header
+      const response = await axios.get("http://localhost:3000/api/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       const dataArray = Array.isArray(response.data) ? response.data : response.data.data;
       setUsers(dataArray || []);
     } catch (error) {
@@ -39,7 +48,12 @@ const Users = () => {
   const handleDeleteUser = async (id) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus user ini?")) {
       try {
-        await axios.delete(`http://localhost:3000/api/users/${id}`);
+        const token = localStorage.getItem("token");
+        await axios.delete(`http://localhost:3000/api/users/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         fetchUsers();
       } catch (error) {
         alert("Gagal menghapus user: " + (error.response?.data?.message || error.message));
@@ -77,7 +91,6 @@ const Users = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-700/80 bg-slate-800/40 text-slate-400 uppercase text-xs tracking-wider">
-                  <th className="py-4 px-6 font-semibold">ID</th>
                   <th className="py-4 px-6 font-semibold">NAMA</th>
                   <th className="py-4 px-6 font-semibold">EMAIL</th>
                   <th className="py-4 px-6 font-semibold">ROLE</th>
@@ -103,7 +116,6 @@ const Users = () => {
                 ) : (
                   users.map((user) => (
                     <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-4 px-6 font-mono text-slate-400">{user.id}</td>
                       <td className="py-4 px-6 font-semibold text-slate-100">{user.name}</td>
                       <td className="py-4 px-6 text-slate-300">{user.email}</td>
                       <td className="py-4 px-6">
@@ -114,7 +126,7 @@ const Users = () => {
                               : "bg-blue-500/10 text-blue-400 border border-blue-500/30"
                           }`}
                         >
-                          {user.role}
+                          {user.role || "kasir"}
                         </span>
                       </td>
                       <td className="py-4 px-6 text-center">

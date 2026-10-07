@@ -36,16 +36,40 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
     setLoading(true);
     setErrorMsg("");
 
+    // 1. Ambil token dari localStorage
+    const token = localStorage.getItem("token");
+
+    // 2. Jika token tidak ditemukan
+    if (!token) {
+      setErrorMsg("Token tidak tersedia. Silakan login kembali!");
+      setLoading(false);
+      return;
+    }
+
     try {
+      // 3. Tambahkan Authorization header
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
       if (editData) {
-        await axios.put(`http://localhost:3000/api/users/${editData.id}`, formData);
+        await axios.put(
+          `http://localhost:3000/api/users/${editData.id}`,
+          formData,
+          config
+        );
       } else {
-        await axios.post("http://localhost:3000/api/users", formData);
+        await axios.post("http://localhost:3000/api/users", formData, config);
       }
+
       onRefresh();
       onClose();
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || "Terjadi kesalahan pada server");
+      setErrorMsg(
+        err.response?.data?.message || "Terjadi kesalahan pada server"
+      );
     } finally {
       setLoading(false);
     }
@@ -61,7 +85,9 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
               {editData ? "Edit Data User" : "Tambah User Baru"}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {editData ? "Perbarui informasi akun pengguna" : "Isi formulir untuk menambahkan akun baru"}
+              {editData
+                ? "Perbarui informasi akun pengguna"
+                : "Isi formulir untuk menambahkan akun baru"}
             </p>
           </div>
           <button
@@ -113,7 +139,12 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-              Password {editData && <span className="text-[10px] text-slate-400 lowercase font-normal">(opsional)</span>}
+              Password{" "}
+              {editData && (
+                <span className="text-[10px] text-slate-400 lowercase font-normal">
+                  (opsional)
+                </span>
+              )}
             </label>
             <input
               type="password"
@@ -121,7 +152,11 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
               value={formData.password}
               onChange={handleChange}
               required={!editData}
-              placeholder={editData ? "•••••••• (Biarkan kosong jika tidak diubah)" : "••••••••"}
+              placeholder={
+                editData
+                  ? "•••••••• (Biarkan kosong jika tidak diubah)"
+                  : "••••••••"
+              }
               className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-xl focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 transition-all placeholder:text-slate-400"
             />
           </div>
@@ -157,9 +192,24 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
             >
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path>
                   </svg>
                   Menyimpan...
                 </span>
