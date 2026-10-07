@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminLayout from "./layouts/AdminLayout";
 import Dashboard from "./pages/Dashboard";
 import Layanan from "./pages/Layanan";
+import { dummyAdmin } from "./pages/dummyUser";
 
 function App() {
   return (
@@ -21,6 +22,12 @@ function App() {
               </h1>
             }
           />
+
+          <Route
+  path="/layanan"
+  element={<Layanan user={dummyAdmin} />}
+/>
+
 
           <Route
             path="/pesan-online"

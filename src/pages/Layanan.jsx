@@ -2,7 +2,23 @@ import { useEffect, useState } from "react";
 
 const API_URL = "http://localhost:3000";
 
-function Layanan() {
+function Layanan({ user }) {
+  // =========================================================
+  // ROLE / ACCESS CONTROL
+  // =========================================================
+
+  // Role yang diperbolehkan mengakses halaman Layanan
+  const allowedRoles = ["admin", "owner"];
+
+  // Dibuat lowercase supaya bisa menerima:
+  // admin / ADMIN / Admin
+  // owner / OWNER / Owner
+  const userRole = user?.role?.toLowerCase();
+
+  const hasAccess =
+    Boolean(userRole) &&
+    allowedRoles.includes(userRole);
+
   // =========================================================
   // STATE
   // =========================================================
@@ -140,9 +156,22 @@ function Layanan() {
     }
   };
 
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
+
   useEffect(() => {
+    /*
+     * Jika user belum memiliki role atau role tidak
+     * termasuk admin/owner, jangan request data API.
+     */
+    if (!hasAccess) {
+      setLoading(false);
+      return;
+    }
+
     loadData();
-  }, []);
+  }, [hasAccess]);
 
   // =========================================================
   // CATEGORY
@@ -158,9 +187,9 @@ function Layanan() {
     setShowCategoryModal(false);
   };
 
-  // =========================
+  // =========================================================
   // CREATE CATEGORY
-  // =========================
+  // =========================================================
 
   const handleCreateCategory = async (e) => {
     e.preventDefault();
@@ -204,14 +233,13 @@ function Layanan() {
     }
   };
 
-  // =========================
+  // =========================================================
   // DELETE CATEGORY
-  // =========================
+  // =========================================================
 
   const handleDeleteCategory = async (
     category
   ) => {
-    // Jangan hapus jika masih memiliki layanan
     if (category.services.length > 0) {
       alert(
         "Kategori tidak dapat dihapus karena masih memiliki layanan. Hapus semua layanan dalam kategori terlebih dahulu."
@@ -282,9 +310,9 @@ function Layanan() {
     setShowServiceModal(true);
   };
 
-  // =========================
+  // =========================================================
   // EDIT SERVICE
-  // =========================
+  // =========================================================
 
   const handleOpenEditService = (service) => {
     setEditingService(service);
@@ -298,9 +326,9 @@ function Layanan() {
     setShowServiceModal(true);
   };
 
-  // =========================
+  // =========================================================
   // CLOSE SERVICE MODAL
-  // =========================
+  // =========================================================
 
   const handleCloseServiceModal = () => {
     setEditingService(null);
@@ -314,9 +342,9 @@ function Layanan() {
     setShowServiceModal(false);
   };
 
-  // =========================
+  // =========================================================
   // SERVICE FORM CHANGE
-  // =========================
+  // =========================================================
 
   const handleServiceFormChange = (e) => {
     const { name, value } = e.target;
@@ -327,9 +355,9 @@ function Layanan() {
     }));
   };
 
-  // =========================
+  // =========================================================
   // CREATE / UPDATE SERVICE
-  // =========================
+  // =========================================================
 
   const handleSubmitService = async (e) => {
     e.preventDefault();
@@ -391,9 +419,9 @@ function Layanan() {
     }
   };
 
-  // =========================
+  // =========================================================
   // DELETE SERVICE
-  // =========================
+  // =========================================================
 
   const handleDeleteService = async (
     service
@@ -449,9 +477,9 @@ function Layanan() {
     setShowPriceModal(true);
   };
 
-  // =========================
+  // =========================================================
   // EDIT PRICE
-  // =========================
+  // =========================================================
 
   const handleOpenEditPrice = (price) => {
     setEditingPrice(price);
@@ -466,9 +494,9 @@ function Layanan() {
     setShowPriceModal(true);
   };
 
-  // =========================
+  // =========================================================
   // CLOSE PRICE MODAL
-  // =========================
+  // =========================================================
 
   const handleClosePriceModal = () => {
     setEditingPrice(null);
@@ -483,9 +511,9 @@ function Layanan() {
     setShowPriceModal(false);
   };
 
-  // =========================
+  // =========================================================
   // PRICE FORM CHANGE
-  // =========================
+  // =========================================================
 
   const handlePriceFormChange = (e) => {
     const { name, value } = e.target;
@@ -496,9 +524,9 @@ function Layanan() {
     }));
   };
 
-  // =========================
+  // =========================================================
   // CREATE / UPDATE PRICE
-  // =========================
+  // =========================================================
 
   const handleSubmitPrice = async (e) => {
     e.preventDefault();
@@ -577,9 +605,9 @@ function Layanan() {
     }
   };
 
-  // =========================
+  // =========================================================
   // DELETE PRICE
-  // =========================
+  // =========================================================
 
   const handleDeletePrice = async (
     price
@@ -647,6 +675,41 @@ function Layanan() {
           </p>
 
         </div>
+      </div>
+    );
+  }
+
+  // =========================================================
+  // ACCESS DENIED
+  // =========================================================
+
+  if (!hasAccess) {
+    return (
+      <div className="p-6">
+
+        <div className="bg-white border border-red-200 rounded-xl p-10 text-center">
+
+          <div className="text-5xl mb-4">
+            🔒
+          </div>
+
+          <h2 className="text-xl font-bold text-gray-800">
+            Akses Ditolak
+          </h2>
+
+          <p className="text-gray-500 mt-2">
+            Anda tidak memiliki izin untuk
+            mengakses halaman layanan.
+          </p>
+
+          {user?.role && (
+            <p className="text-sm text-gray-400 mt-3">
+              Role Anda: {user.role}
+            </p>
+          )}
+
+        </div>
+
       </div>
     );
   }
@@ -816,9 +879,7 @@ function Layanan() {
                 key={category.id}
               >
 
-                {/* =================================================
-                    CATEGORY HEADER
-                ================================================= */}
+                {/* CATEGORY HEADER */}
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
 
@@ -881,9 +942,7 @@ function Layanan() {
 
                 </div>
 
-                {/* =================================================
-                    NO SERVICE
-                ================================================= */}
+                {/* NO SERVICE */}
 
                 {category.services
                   .length === 0 ? (
@@ -914,9 +973,7 @@ function Layanan() {
 
                 ) : (
 
-                  /* =================================================
-                     SERVICE GRID
-                  ================================================= */
+                  /* SERVICE GRID */
 
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
@@ -928,9 +985,7 @@ function Layanan() {
                           className="bg-white border rounded-xl p-5 hover:shadow-sm transition"
                         >
 
-                          {/* =========================================
-                              SERVICE HEADER
-                          ========================================= */}
+                          {/* SERVICE HEADER */}
 
                           <div className="flex items-start justify-between gap-4">
 
@@ -982,9 +1037,7 @@ function Layanan() {
 
                           </div>
 
-                          {/* =========================================
-                              PRICE
-                          ========================================= */}
+                          {/* PRICE */}
 
                           <div className="border-t mt-5 pt-4">
 
@@ -1138,8 +1191,6 @@ function Layanan() {
 
           <div className="w-full max-w-md bg-white rounded-xl shadow-xl">
 
-            {/* HEADER */}
-
             <div className="flex items-center justify-between px-6 py-4 border-b">
 
               <h2 className="text-lg font-bold text-gray-800">
@@ -1157,8 +1208,6 @@ function Layanan() {
               </button>
 
             </div>
-
-            {/* FORM */}
 
             <form
               onSubmit={
@@ -1187,8 +1236,6 @@ function Layanan() {
                 />
 
               </div>
-
-              {/* FOOTER */}
 
               <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
 
@@ -1229,8 +1276,6 @@ function Layanan() {
 
           <div className="w-full max-w-md bg-white rounded-xl shadow-xl">
 
-            {/* HEADER */}
-
             <div className="flex items-center justify-between px-6 py-4 border-b">
 
               <h2 className="text-lg font-bold text-gray-800">
@@ -1250,8 +1295,6 @@ function Layanan() {
               </button>
 
             </div>
-
-            {/* FORM */}
 
             <form
               onSubmit={
@@ -1280,7 +1323,7 @@ function Layanan() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   >
 
-                    <option value="" className="text-black">
+                    <option value="">
                       Pilih kategori
                     </option>
 
@@ -1354,8 +1397,6 @@ function Layanan() {
 
               </div>
 
-              {/* FOOTER */}
-
               <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
 
                 <button
@@ -1397,8 +1438,6 @@ function Layanan() {
 
           <div className="w-full max-w-md bg-white rounded-xl shadow-xl">
 
-            {/* HEADER */}
-
             <div className="flex items-center justify-between px-6 py-4 border-b">
 
               <h2 className="text-lg font-bold text-gray-800">
@@ -1418,8 +1457,6 @@ function Layanan() {
               </button>
 
             </div>
-
-            {/* FORM */}
 
             <form
               onSubmit={
@@ -1565,8 +1602,6 @@ function Layanan() {
                 </div>
 
               </div>
-
-              {/* FOOTER */}
 
               <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
 
