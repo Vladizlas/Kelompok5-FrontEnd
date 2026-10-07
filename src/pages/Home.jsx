@@ -41,10 +41,10 @@ export default function Home() {
       {/* NAVBAR */}
       <nav className="flex items-center justify-between px-8 py-5 border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-500/20">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-500/20">
             FL
           </div>
-          <span className="text-xl font-bold tracking-wide bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+          <span className="text-xl font-bold tracking-wide bg-linear-to-r from-white to-slate-400 bg-clip-text text-transparent">
             Fanara Laundry
           </span>
         </div>
@@ -99,7 +99,7 @@ export default function Home() {
 
         {/* HERO CARD */}
         <div className="relative">
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 opacity-30 blur-xl"></div>
+          <div className="absolute -inset-1 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 opacity-30 blur-xl"></div>
           <div className="relative rounded-2xl bg-slate-900/90 border border-slate-800 p-8 space-y-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <span className="text-sm font-semibold text-slate-400">Status Operasional Hari Ini</span>

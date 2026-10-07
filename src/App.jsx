@@ -6,6 +6,8 @@ import AdminLayout from "./layouts/AdminLayout";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import Layanan from "./pages/Layanan";
+import Order from "./pages/Order";
+import AddCustomer from "./pages/Customers";
 
 function App() {
   return (
@@ -25,14 +27,14 @@ function App() {
             path="/dashboard"
             element={<Dashboard />}
           />
+          <Route
+            path="/order"
+            element={<Order />}
+          />
 
           <Route
             path="/order"
-            element={
-              <h1 className="text-2xl font-bold">
-                Order
-              </h1>
-            }
+            element={<Order />}
           />
 
           <Route
@@ -42,15 +44,18 @@ function App() {
                 Pesan Online
               </h1>
             }
+
+          />
+          <Route
+            path="/customer"
+            element={
+              <AddCustomer/>
+            }
           />
 
           <Route
             path="/customer"
-            element={
-              <h1 className="text-2xl font-bold">
-                Customer
-              </h1>
-            }
+            element={<Customer />}
           />
 
           <Route
