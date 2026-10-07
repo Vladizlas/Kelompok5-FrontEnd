@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 
 const API_URL = "http://localhost:3000";
 
-function Layanan({ user }) {
+function Layanan() {
+  const { user } = useOutletContext();
+
+  console.log("USER DI LAYANAN:", user);
+
   // =========================================================
   // ROLE / ACCESS CONTROL
   // =========================================================
 
-  // Role yang diperbolehkan mengakses halaman Layanan
   const allowedRoles = ["admin", "owner"];
 
-  // Dibuat lowercase supaya bisa menerima:
-  // admin / ADMIN / Admin
-  // owner / OWNER / Owner
   const userRole = user?.role?.toLowerCase();
 
   const hasAccess =
@@ -29,18 +30,18 @@ function Layanan({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // =========================
+  // =========================================================
   // CATEGORY MODAL
-  // =========================
+  // =========================================================
 
   const [showCategoryModal, setShowCategoryModal] =
     useState(false);
 
   const [categoryName, setCategoryName] = useState("");
 
-  // =========================
+  // =========================================================
   // SERVICE MODAL
-  // =========================
+  // =========================================================
 
   const [showServiceModal, setShowServiceModal] =
     useState(false);
@@ -54,9 +55,9 @@ function Layanan({ user }) {
     description: "",
   });
 
-  // =========================
+  // =========================================================
   // PRICE MODAL
-  // =========================
+  // =========================================================
 
   const [showPriceModal, setShowPriceModal] =
     useState(false);
@@ -161,10 +162,6 @@ function Layanan({ user }) {
   // =========================================================
 
   useEffect(() => {
-    /*
-     * Jika user belum memiliki role atau role tidak
-     * termasuk admin/owner, jangan request data API.
-     */
     if (!hasAccess) {
       setLoading(false);
       return;
@@ -942,10 +939,11 @@ function Layanan({ user }) {
 
                 </div>
 
-                {/* NO SERVICE */}
+                {/* =====================================================
+                    NO SERVICE
+                ===================================================== */}
 
-                {category.services
-                  .length === 0 ? (
+                {category.services.length === 0 ? (
 
                   <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6">
 
@@ -973,75 +971,85 @@ function Layanan({ user }) {
 
                 ) : (
 
-                  /* SERVICE GRID */
+                  /* =====================================================
+                     SERVICE LIST FULL WIDTH
+                  ===================================================== */
 
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                  <div className="space-y-4">
 
                     {category.services.map(
                       (service) => (
 
                         <div
                           key={service.id}
-                          className="bg-white border rounded-xl p-5 hover:shadow-sm transition"
+                          className="w-full bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition"
                         >
 
-                          {/* SERVICE HEADER */}
+                          {/* =================================================
+                              SERVICE HEADER
+                          ================================================= */}
 
-                          <div className="flex items-start justify-between gap-4">
+                          <div className="p-5">
 
-                            <div className="min-w-0">
+                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
 
-                              <h3 className="text-lg font-semibold text-gray-800">
-                                {service.name}
-                              </h3>
+                              <div className="min-w-0 flex-1">
 
-                              {service.description && (
-                                <p className="text-sm text-gray-500 mt-1">
-                                  {
-                                    service.description
+                                <h3 className="text-lg font-semibold text-gray-800">
+                                  {service.name}
+                                </h3>
+
+                                {service.description && (
+                                  <p className="text-sm text-gray-500 mt-1">
+                                    {
+                                      service.description
+                                    }
+                                  </p>
+                                )}
+
+                              </div>
+
+                              {/* SERVICE ACTION */}
+
+                              <div className="flex gap-2 shrink-0">
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleOpenEditService(
+                                      service
+                                    )
                                   }
-                                </p>
-                              )}
+                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                                >
+                                  Edit
+                                </button>
 
-                            </div>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDeleteService(
+                                      service
+                                    )
+                                  }
+                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+                                >
+                                  Hapus
+                                </button>
 
-                            {/* SERVICE ACTION */}
-
-                            <div className="flex gap-2 shrink-0">
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleOpenEditService(
-                                    service
-                                  )
-                                }
-                                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
-                              >
-                                Edit
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleDeleteService(
-                                    service
-                                  )
-                                }
-                                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
-                              >
-                                Hapus
-                              </button>
+                              </div>
 
                             </div>
 
                           </div>
 
-                          {/* PRICE */}
+                          {/* =================================================
+                              PRICE SECTION
+                          ================================================= */}
 
-                          <div className="border-t mt-5 pt-4">
+                          <div className="border-t bg-gray-50 p-5">
 
-                            <div className="flex items-center justify-between mb-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
 
                               <h4 className="text-sm font-semibold text-gray-700">
                                 Daftar Harga
@@ -1061,85 +1069,125 @@ function Layanan({ user }) {
 
                             </div>
 
-                            {/* PRICE LIST */}
+                            {/* =================================================
+                                PRICE LIST
+                            ================================================= */}
 
                             {service.prices &&
                             service.prices.length >
                               0 ? (
 
-                              <div className="space-y-2">
+                              <div className="w-full overflow-x-auto">
 
-                                {service.prices.map(
-                                  (price) => (
+                                <div className="min-w-[600px]">
 
-                                    <div
-                                      key={
-                                        price.id
-                                      }
-                                      className="flex items-center justify-between gap-3 bg-gray-50 rounded-lg px-3 py-2.5"
-                                    >
+                                  {/* PRICE HEADER */}
 
-                                      <div className="min-w-0">
+                                  <div className="grid grid-cols-[1fr_1fr_160px] gap-4 px-4 py-2 text-xs font-semibold text-gray-500 uppercase">
 
-                                        <p className="text-sm font-medium text-gray-700">
-                                          {
-                                            price.itemType
-                                          }
-                                        </p>
-
-                                        <p className="text-sm font-semibold text-gray-900">
-                                          Rp{" "}
-                                          {Number(
-                                            price.price
-                                          ).toLocaleString(
-                                            "id-ID"
-                                          )}{" "}
-                                          /{" "}
-                                          {
-                                            price.unit
-                                          }
-                                        </p>
-
-                                      </div>
-
-                                      <div className="flex gap-2 shrink-0">
-
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            handleOpenEditPrice(
-                                              price
-                                            )
-                                          }
-                                          className="px-2.5 py-1 text-xs rounded-md bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
-                                        >
-                                          Edit
-                                        </button>
-
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            handleDeletePrice(
-                                              price
-                                            )
-                                          }
-                                          className="px-2.5 py-1 text-xs rounded-md bg-red-50 text-red-600 hover:bg-red-100"
-                                        >
-                                          Hapus
-                                        </button>
-
-                                      </div>
-
+                                    <div>
+                                      Jenis Item
                                     </div>
 
-                                  )
-                                )}
+                                    <div>
+                                      Harga
+                                    </div>
+
+                                    <div className="text-right">
+                                      Aksi
+                                    </div>
+
+                                  </div>
+
+                                  {/* PRICE ROW */}
+
+                                  <div className="space-y-2">
+
+                                    {service.prices.map(
+                                      (price) => (
+
+                                        <div
+                                          key={
+                                            price.id
+                                          }
+                                          className="grid grid-cols-[1fr_1fr_160px] gap-4 items-center bg-white border border-gray-200 rounded-lg px-4 py-3"
+                                        >
+
+                                          {/* ITEM */}
+
+                                          <div className="min-w-0">
+
+                                            <p className="text-sm font-medium text-gray-700 truncate">
+                                              {
+                                                price.itemType
+                                              }
+                                            </p>
+
+                                          </div>
+
+                                          {/* PRICE */}
+
+                                          <div>
+
+                                            <p className="text-sm font-semibold text-gray-900">
+                                              Rp{" "}
+                                              {Number(
+                                                price.price
+                                              ).toLocaleString(
+                                                "id-ID"
+                                              )}
+                                              {" / "}
+                                              {
+                                                price.unit
+                                              }
+                                            </p>
+
+                                          </div>
+
+                                          {/* ACTION */}
+
+                                          <div className="flex justify-end gap-2">
+
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleOpenEditPrice(
+                                                  price
+                                                )
+                                              }
+                                              className="px-2.5 py-1 text-xs rounded-md bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                                            >
+                                              Edit
+                                            </button>
+
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleDeletePrice(
+                                                  price
+                                                )
+                                              }
+                                              className="px-2.5 py-1 text-xs rounded-md bg-red-50 text-red-600 hover:bg-red-100"
+                                            >
+                                              Hapus
+                                            </button>
+
+                                          </div>
+
+                                        </div>
+
+                                      )
+                                    )}
+
+                                  </div>
+
+                                </div>
 
                               </div>
 
                             ) : (
 
-                              <div className="py-4 text-center bg-gray-50 rounded-lg">
+                              <div className="py-6 text-center bg-white border border-dashed border-gray-300 rounded-lg">
 
                                 <p className="text-sm text-gray-400">
                                   Belum ada harga.
@@ -1173,7 +1221,6 @@ function Layanan({ user }) {
                 )}
 
               </section>
-
             )
           )}
 

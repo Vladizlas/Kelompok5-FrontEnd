@@ -2,11 +2,29 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
 export default function AdminLayout() {
+  const savedUser = localStorage.getItem("user");
+
+  let user = null;
+
+  try {
+    user = savedUser
+      ? JSON.parse(savedUser)
+      : null;
+  } catch (error) {
+    console.error(
+      "Gagal membaca data user:",
+      error
+    );
+
+    user = null;
+  }
+
   return (
     <div className="flex bg-base-200 min-h-screen">
-      <Sidebar />
+      <Sidebar user={user} />
+
       <main className="flex-1 p-6">
-        <Outlet />
+        <Outlet context={{ user }} />
       </main>
     </div>
   );
