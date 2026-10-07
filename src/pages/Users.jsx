@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import Sidebar from "../components/Sidebar";
 import UserModal from "../components/UserModal";
 
 const Users = () => {
@@ -63,8 +62,6 @@ const Users = () => {
 
   return (
     <div className="flex min-h-screen bg-[#171d25]">
-      {/* Sidebar Komponen di Sisi Kiri */}
-      <Sidebar />
 
       {/* Konten Utama di Sisi Kanan */}
       <div className="flex-1 p-8 text-slate-100 overflow-y-auto">
