@@ -1151,7 +1151,7 @@ function Layanan() {
                 onClick={
                   handleCloseCategoryModal
                 }
-                className="text-gray-400 hover:text-gray-600 text-xl"
+                className="text-black hover:text-gray-600 text-xl"
               >
                 ×
               </button>
@@ -1168,7 +1168,7 @@ function Layanan() {
 
               <div className="p-6">
 
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   Nama Kategori
                 </label>
 
@@ -1183,7 +1183,7 @@ function Layanan() {
                   placeholder="Contoh: Cuci Kering"
                   maxLength={100}
                   autoFocus
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full text-black border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
 
               </div>
@@ -1277,10 +1277,10 @@ function Layanan() {
                     onChange={
                       handleServiceFormChange
                     }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   >
 
-                    <option value="">
+                    <option value="" className="text-black">
                       Pilih kategori
                     </option>
 
@@ -1309,7 +1309,7 @@ function Layanan() {
 
                 <div>
 
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Nama Layanan
                   </label>
 
@@ -1324,7 +1324,7 @@ function Layanan() {
                     }
                     placeholder="Contoh: Cuci Kiloan"
                     maxLength={100}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   />
 
                 </div>
@@ -1347,7 +1347,7 @@ function Layanan() {
                     }
                     placeholder="Contoh: Layanan cuci pakaian berdasarkan berat"
                     rows={4}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-black resize-none"
                   />
 
                 </div>
@@ -1448,7 +1448,7 @@ function Layanan() {
                     disabled={
                       Boolean(editingPrice)
                     }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 text-black"
                   >
 
                     <option value="">
@@ -1495,7 +1495,7 @@ function Layanan() {
                     }
                     placeholder="Contoh: Pakaian"
                     maxLength={100}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="text-black w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                   />
 
                 </div>
@@ -1526,7 +1526,7 @@ function Layanan() {
                       placeholder="7000"
                       min="0"
                       step="1"
-                      className="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      className="text-black w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                     />
 
                   </div>
@@ -1549,7 +1549,7 @@ function Layanan() {
                     onChange={
                       handlePriceFormChange
                     }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="text-black w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                   >
 
                     <option value="kg">
