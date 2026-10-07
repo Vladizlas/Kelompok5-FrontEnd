@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import Layanan from "./pages/Layanan";
 import Order from "./pages/Order";
-import AddCustomer from "./pages/Customers";
+import Customer from "./pages/Customer";
 
 function App() {
   return (
@@ -27,10 +27,6 @@ function App() {
             path="/dashboard"
             element={<Dashboard />}
           />
-          <Route
-            path="/order"
-            element={<Order />}
-          />
 
           <Route
             path="/order"
@@ -43,13 +39,6 @@ function App() {
               <h1 className="text-2xl font-bold">
                 Pesan Online
               </h1>
-            }
-
-          />
-          <Route
-            path="/customer"
-            element={
-              <AddCustomer/>
             }
           />
 
