@@ -10,6 +10,7 @@ import Order from "./pages/Order";
 import Customer from "./pages/Customer";
 import Pengeluaran from "./pages/Pengeluaran";
 import Home from "./pages/Home";
+import PesanOnline from "./pages/PesanOnline";
 
 function App() {
   return (
@@ -23,6 +24,11 @@ function App() {
         <Route
           path="/login"
           element={<Login />}
+        />
+        
+        <Route
+          path="/"
+          element={<Home />}
         />
 
         {/* ADMIN AREA */}
@@ -41,9 +47,7 @@ function App() {
           <Route
             path="/pesan-online"
             element={
-              <h1 className="text-2xl font-bold">
-                Pesan Online
-              </h1>
+             <PesanOnline/>
             }
           />
 

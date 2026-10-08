@@ -29,3 +29,19 @@ export const deleteOrder = async (id) => {
 
   return response.data;
 };
+
+// dipakai kasir: ubah status cucian
+export const updateOrderStatus = async (id, status) => {
+  const response = await api.patch(`/orders/${id}/status`, { status });
+
+  return response.data;
+};
+
+// publik: cek status via nomor invoice (dipakai di homepage)
+export const trackOrder = async (invoice) => {
+  const response = await api.get(
+    `/orders/track/${encodeURIComponent(invoice)}`
+  );
+
+  return response.data;
+};

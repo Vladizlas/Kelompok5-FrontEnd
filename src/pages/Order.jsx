@@ -5,8 +5,10 @@ import {
   getOrders,
   createOrder,
   updateOrder,
+  updateOrderStatus,
   deleteOrder,
 } from "../services/orderApi";
+
 import { getCustomers } from "../services/customerApi";
 import { getCategories } from "../services/categoryServiceApi";
 import { getServices } from "../services/serviceApi";
@@ -14,6 +16,20 @@ import { getServices } from "../services/serviceApi";
 // ---------------------------------------------------------
 // HELPER
 // ---------------------------------------------------------
+
+const STATUS_OPTIONS = [
+  { value: "diterima", label: "Diterima" },
+  { value: "diproses", label: "Diproses" },
+  { value: "selesai", label: "Selesai" },
+  { value: "diambil", label: "Diambil" },
+];
+
+const STATUS_CLASS = {
+  diterima: "select-info",
+  diproses: "select-warning",
+  selesai: "select-success",
+  diambil: "select-neutral",
+};
 
 let itemKeySeed = 0;
 
@@ -338,6 +354,24 @@ function Order() {
   };
 
   // =========================================================
+  // UBAH STATUS
+  // =========================================================
+
+  const handleStatusChange = async (order, status) => {
+    try {
+      await updateOrderStatus(order.id, status);
+
+      setOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? { ...o, status } : o))
+      );
+    } catch (err) {
+      console.error(err);
+
+      alert(err.response?.data?.message || "Gagal mengubah status");
+    }
+  };
+
+  // =========================================================
   // DELETE
   // =========================================================
 
@@ -429,6 +463,7 @@ function Order() {
               <th>Rincian</th>
               <th>Total</th>
               <th>Pembayaran</th>
+              <th>Status</th>
               <th className="text-center">Aksi</th>
             </tr>
           </thead>
@@ -436,7 +471,7 @@ function Order() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" className="text-center py-10">
+                <td colSpan="7" className="text-center py-10">
                   <span className="loading loading-spinner"></span>
                 </td>
               </tr>
@@ -495,6 +530,24 @@ function Order() {
                     >
                       {order.paymentMethod}
                     </span>
+                  </td>
+
+                                    <td className="align-top">
+                    <select
+                      value={order.status}
+                      onChange={(e) =>
+                        handleStatusChange(order, e.target.value)
+                      }
+                      className={`select select-xs w-28 ${
+                        STATUS_CLASS[order.status] || ""
+                      }`}
+                    >
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
                   </td>
 
                   <td className="align-top">
