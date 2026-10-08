@@ -9,6 +9,7 @@ import Layanan from "./pages/Layanan";
 import Order from "./pages/Order";
 import Customer from "./pages/Customer";
 import Pengeluaran from "./pages/Pengeluaran";
+import Home from "./pages/Home";
 
 function App() {
   return (
@@ -19,6 +20,11 @@ function App() {
         <Route
           path="/login"
           element={<Login />}
+        />
+        
+        <Route
+          path="/"
+          element={<Home />}
         />
 
         {/* ADMIN AREA */}
