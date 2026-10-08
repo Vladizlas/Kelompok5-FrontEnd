@@ -9,11 +9,15 @@ import Layanan from "./pages/Layanan";
 import Order from "./pages/Order";
 import Customer from "./pages/Customer";
 import Pengeluaran from "./pages/Pengeluaran";
+import Home from "./pages/Home";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {/* HOME */}
+        <Route path="/" element={<Home />} />
 
         {/* LOGIN */}
         <Route
