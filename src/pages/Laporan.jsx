@@ -9,7 +9,7 @@ import {
     Calendar,
     CreditCard,
     Banknote,
-    RotateCcw
+    RotateCcw,
 } from "lucide-react";
 
 // ---------------------------------------------------------
@@ -68,6 +68,11 @@ const getWeekRange = (weekStr) => {
     return { start, end };
 };
 
+// Membaca nominal uang masuk dari total harga yang disesuaikan dengan DB
+const getAmountPaid = (order) => {
+    return Number(order.totalPrice || order.total_price || order.total || 0);
+};
+
 function Report() {
     const [orders, setOrders] = useState([]);
     const [expenses, setExpenses] = useState([]);
@@ -111,7 +116,6 @@ function Report() {
         if (!itemDateStr) return false;
         const itemDate = new Date(itemDateStr);
 
-        // Format tanggal lokal untuk pembandingan akurat
         const year = itemDate.getFullYear();
         const month = String(itemDate.getMonth() + 1).padStart(2, "0");
         const day = String(itemDate.getDate()).padStart(2, "0");
@@ -153,29 +157,8 @@ function Report() {
     // FINANCIAL CALCULATIONS
     // ---------------------------------------------------------
 
-    // Memperbaiki perbaikan kondisi lunas (menghapus || true)
-    const paidOrders = filteredOrders.filter(
-        (o) =>
-            o.paymentStatus === "paid" ||
-            o.isPaid === true ||
-            o.status === "lunas" ||
-            o.paymentStatus === "lunas"
-    );
-
-    const unpaidOrders = filteredOrders.filter(
-        (o) =>
-            o.paymentStatus === "unpaid" ||
-            o.status === "belum_dibayar" ||
-            o.isPaid === false
-    );
-
-    const totalIncome = paidOrders.reduce(
-        (sum, o) => sum + Number(o.totalPrice || o.total || 0),
-        0
-    );
-
-    const totalUnpaid = unpaidOrders.reduce(
-        (sum, o) => sum + Number(o.totalPrice || o.total || 0),
+    const totalIncome = filteredOrders.reduce(
+        (sum, o) => sum + getAmountPaid(o),
         0
     );
 
@@ -186,9 +169,10 @@ function Report() {
 
     const netProfit = totalIncome - totalExpense;
 
-    const incomeByMethod = paidOrders.reduce((acc, o) => {
-        const method = (o.paymentMethod || "cash").toLowerCase();
-        acc[method] = (acc[method] || 0) + Number(o.totalPrice || o.total || 0);
+    const incomeByMethod = filteredOrders.reduce((acc, o) => {
+        const method = (o.paymentMethod || o.payment_method || "cash").toLowerCase();
+        const paidAmount = getAmountPaid(o);
+        acc[method] = (acc[method] || 0) + paidAmount;
         return acc;
     }, {});
 
@@ -203,9 +187,11 @@ function Report() {
             {/* HEADER & FILTER */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-sky-100 shadow-xs">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Laporan Keuangan</h1>
+                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                        Laporan Keuangan
+                    </h1>
                     <p className="text-sm text-slate-500 mt-1">
-                        Ringkasan pemasukan, pengeluaran, laba bersih, dan status pembayaran
+                        Ringkasan pemasukan, pengeluaran, dan laba bersih
                     </p>
                 </div>
 
@@ -292,61 +278,66 @@ function Report() {
             ) : (
                 <>
                     {/* CARDS RINGKASAN UTAMA */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* UANG MASUK */}
                         <div className="bg-white border border-sky-100 rounded-2xl p-5 shadow-xs space-y-2">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">TOTAL UANG MASUK</span>
+                                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
+                                    TOTAL UANG MASUK
+                                </span>
                                 <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
                                     <TrendingUp className="w-5 h-5" />
                                 </div>
                             </div>
-                            <div className="text-2xl font-black text-slate-900">{rupiah(totalIncome)}</div>
-                            <p className="text-xs text-slate-500">Dari order lunas</p>
+                            <div className="text-2xl font-black text-slate-900">
+                                {rupiah(totalIncome)}
+                            </div>
+                            <p className="text-xs text-slate-500">Dari total {filteredOrders.length} order</p>
                         </div>
 
                         {/* UANG KELUAR */}
                         <div className="bg-white border border-sky-100 rounded-2xl p-5 shadow-xs space-y-2">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">TOTAL UANG KELUAR</span>
+                                <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">
+                                    TOTAL UANG KELUAR
+                                </span>
                                 <div className="p-2 rounded-xl bg-rose-50 text-rose-600">
                                     <TrendingDown className="w-5 h-5" />
                                 </div>
                             </div>
-                            <div className="text-2xl font-black text-slate-900">{rupiah(totalExpense)}</div>
+                            <div className="text-2xl font-black text-slate-900">
+                                {rupiah(totalExpense)}
+                            </div>
                             <p className="text-xs text-slate-500">Biaya operasional</p>
                         </div>
 
                         {/* LABA BERSIH */}
                         <div className="bg-white border border-sky-100 rounded-2xl p-5 shadow-xs space-y-2">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-sky-600 uppercase tracking-wider">LABA BERSIH</span>
+                                <span className="text-xs font-bold text-sky-600 uppercase tracking-wider">
+                                    LABA BERSIH
+                                </span>
                                 <div className="p-2 rounded-xl bg-sky-50 text-sky-600">
                                     <Wallet className="w-5 h-5" />
                                 </div>
                             </div>
-                            <div className={`text-2xl font-black ${netProfit < 0 ? 'text-rose-600' : 'text-slate-900'}`}>
+                            <div
+                                className={`text-2xl font-black ${netProfit < 0 ? "text-rose-600" : "text-slate-900"
+                                    }`}
+                            >
                                 {rupiah(netProfit)}
                             </div>
-                            <p className="text-xs text-slate-500">Uang Masuk - Uang Keluar</p>
-                        </div>
-
-                        {/* BELUM DIBAYAR */}
-                        <div className="bg-white border border-sky-100 rounded-2xl p-5 shadow-xs space-y-2">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">PIUTANG (BELUM DIBAYAR)</span>
-                                <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
-                                    <AlertCircle className="w-5 h-5" />
-                                </div>
-                            </div>
-                            <div className="text-2xl font-black text-slate-900">{rupiah(totalUnpaid)}</div>
-                            <p className="text-xs text-slate-500">{unpaidOrders.length} order pending</p>
+                            <p className="text-xs text-slate-500">
+                                Uang Masuk - Uang Keluar
+                            </p>
                         </div>
                     </div>
 
                     {/* UANG MASUK PER METODE PEMBAYARAN */}
                     <div className="bg-white border border-sky-100 rounded-2xl p-6 space-y-4 shadow-xs">
-                        <h2 className="text-base font-bold text-slate-800">Uang Masuk Per Metode Pembayaran</h2>
+                        <h2 className="text-base font-bold text-slate-800">
+                            Uang Masuk Per Metode Pembayaran
+                        </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* CASH */}
                             <div className="p-4 rounded-xl bg-sky-50/50 border border-sky-100 flex justify-between items-center">
@@ -355,7 +346,9 @@ function Report() {
                                         <Banknote className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <div className="text-xs text-slate-500 font-medium">Cash / Tunai</div>
+                                        <div className="text-xs text-slate-500 font-medium">
+                                            Cash / Tunai
+                                        </div>
                                         <div className="text-xl font-bold text-slate-800 mt-0.5">
                                             {rupiah(incomeByMethod["cash"] || 0)}
                                         </div>
@@ -373,7 +366,9 @@ function Report() {
                                         <CreditCard className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <div className="text-xs text-slate-500 font-medium">Transfer / QRIS</div>
+                                        <div className="text-xs text-slate-500 font-medium">
+                                            Transfer / QRIS
+                                        </div>
                                         <div className="text-xl font-bold text-slate-800 mt-0.5">
                                             {rupiah(incomeByMethod["transfer"] || 0)}
                                         </div>
@@ -386,10 +381,12 @@ function Report() {
                         </div>
                     </div>
 
-                    {/* TABEL RINCIAN UANG MASUK (ORDER LUNAS) */}
+                    {/* TABEL RINCIAN UANG MASUK */}
                     <div className="bg-white border border-sky-100 rounded-2xl overflow-hidden shadow-xs">
                         <div className="p-5 border-b border-sky-100">
-                            <h2 className="font-bold text-slate-800 text-base">Rincian Uang Masuk (Order Lunas)</h2>
+                            <h2 className="font-bold text-slate-800 text-base">
+                                Rincian Uang Masuk dari Order
+                            </h2>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
@@ -399,93 +396,51 @@ function Report() {
                                         <th className="py-3.5 px-6">Tanggal</th>
                                         <th className="py-3.5 px-6">Pelanggan</th>
                                         <th className="py-3.5 px-6">Metode</th>
-                                        <th className="py-3.5 px-6 text-right">Total</th>
+                                        <th className="py-3.5 px-6">Status Pengerjaan</th>
+                                        <th className="py-3.5 px-6 text-right">Uang Masuk</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-sky-100 text-sm">
-                                    {paidOrders.length === 0 ? (
+                                    {filteredOrders.length === 0 ? (
                                         <tr>
-                                            <td colSpan="5" className="text-center py-8 text-slate-400">
-                                                Tidak ada transaksi lunas pada periode ini.
+                                            <td colSpan="6" className="text-center py-8 text-slate-400">
+                                                Tidak ada transaksi pada periode ini.
                                             </td>
                                         </tr>
                                     ) : (
-                                        paidOrders.map((order) => (
-                                            <tr key={order.id} className="hover:bg-sky-50/30 transition-colors">
-                                                <td className="py-3.5 px-6 font-mono text-xs font-bold text-sky-600">
-                                                    INV-{String(order.id).padStart(4, "0")}
-                                                </td>
-                                                <td className="py-3.5 px-6 text-slate-600">
-                                                    {formatDate(order.orderDate || order.createdAt)}
-                                                </td>
-                                                <td className="py-3.5 px-6 font-semibold text-slate-800">
-                                                    {order.customer?.name || order.customerName || "-"}
-                                                </td>
-                                                <td className="py-3.5 px-6">
-                                                    <span className="px-2.5 py-1 rounded-md text-xs font-bold uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                                        {order.paymentMethod || "cash"}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3.5 px-6 font-bold text-emerald-600 text-right">
-                                                    {rupiah(order.totalPrice || order.total)}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                        filteredOrders.map((order) => {
+                                            const amountPaid = getAmountPaid(order);
 
-                    {/* TABEL RINCIAN UANG KELUAR (PENGELUARAN OPERASIONAL) */}
-                    <div className="bg-white border border-sky-100 rounded-2xl overflow-hidden shadow-xs">
-                        <div className="p-5 border-b border-sky-100">
-                            <h2 className="font-bold text-slate-800 text-base">Rincian Uang Keluar (Pengeluaran Operasional)</h2>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="border-b border-sky-100 bg-sky-50/40 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                        <th className="py-3.5 px-6 w-16">ID</th>
-                                        <th className="py-3.5 px-6">Tanggal</th>
-                                        <th className="py-3.5 px-6">Kategori</th>
-                                        <th className="py-3.5 px-6">Keterangan</th>
-                                        <th className="py-3.5 px-6 text-right">Jumlah</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-sky-100 text-sm">
-                                    {filteredExpenses.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="5" className="text-center py-8 text-slate-400">
-                                                Tidak ada pengeluaran pada periode ini.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        filteredExpenses.map((expense) => (
-                                            <tr key={expense.id} className="hover:bg-sky-50/30 transition-colors">
-                                                <td className="py-3.5 px-6 font-mono text-xs text-slate-500">#{expense.id}</td>
-                                                <td className="py-3.5 px-6 text-slate-600">
-                                                    {formatDate(
-                                                        expense.date ||
-                                                        expense.expenseDate ||
-                                                        expense.createdAt
-                                                    )}
-                                                </td>
-                                                <td className="py-3.5 px-6">
-                                                    <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
-                                                        {expense.category || expense.kategori || "-"}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3.5 px-6 text-slate-700">
-                                                    {expense.description || expense.keterangan || "-"}
-                                                </td>
-                                                <td className="py-3.5 px-6 font-bold text-rose-600 text-right">
-                                                    {rupiah(
-                                                        expense.amount || expense.total || expense.jumlah
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))
+                                            return (
+                                                <tr
+                                                    key={order.id}
+                                                    className="hover:bg-sky-50/30 transition-colors"
+                                                >
+                                                    <td className="py-3.5 px-6 font-mono text-xs font-bold text-sky-600">
+                                                        INV-{String(order.id).padStart(4, "0")}
+                                                    </td>
+                                                    <td className="py-3.5 px-6 text-slate-600">
+                                                        {formatDate(order.orderDate || order.createdAt)}
+                                                    </td>
+                                                    <td className="py-3.5 px-6 font-semibold text-slate-800">
+                                                        {order.customer?.name || order.customerName || "-"}
+                                                    </td>
+                                                    <td className="py-3.5 px-6">
+                                                        <span className="px-2.5 py-1 rounded-md text-xs font-bold uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                            {order.paymentMethod || order.payment_method || "cash"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3.5 px-6">
+                                                        <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-sky-100 text-sky-700 capitalize">
+                                                            {order.status || "-"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3.5 px-6 font-bold text-emerald-600 text-right">
+                                                        {rupiah(amountPaid)}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>

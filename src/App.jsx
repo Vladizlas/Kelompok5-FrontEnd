@@ -9,7 +9,8 @@ import Layanan from "./pages/Layanan";
 import Order from "./pages/Order";
 import Customer from "./pages/Customer";
 import Pengeluaran from "./pages/Pengeluaran";
-import LaporanPage from "./pages/Laporan";
+import Home from "./pages/Home";
+import Report from "./pages/Laporan";
 
 function App() {
   return (
@@ -20,6 +21,11 @@ function App() {
         <Route
           path="/login"
           element={<Login />}
+        />
+
+        <Route
+          path="/"
+          element={<Home />}
         />
 
         {/* ADMIN AREA */}
@@ -61,9 +67,19 @@ function App() {
 
           <Route
             path="/laporan"
-            element={<LaporanPage/>}
+            element={<Report/>
+            }
           />
-          
+
+          <Route
+            path="/pesan"
+            element={
+              <h1 className="text-2xl font-bold">
+                Pesan
+              </h1>
+            }
+          />
+
           <Route
             path="/users"
             element={<Users />}

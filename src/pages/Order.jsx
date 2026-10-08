@@ -5,8 +5,10 @@ import {
   getOrders,
   createOrder,
   updateOrder,
+  updateOrderStatus,
   deleteOrder,
 } from "../services/orderApi";
+
 import { getCustomers } from "../services/customerApi";
 import { getCategories } from "../services/categoryServiceApi";
 import { getServices } from "../services/serviceApi";
@@ -14,6 +16,20 @@ import { getServices } from "../services/serviceApi";
 // ---------------------------------------------------------
 // HELPER
 // ---------------------------------------------------------
+
+const STATUS_OPTIONS = [
+  { value: "diterima", label: "Diterima" },
+  { value: "diproses", label: "Diproses" },
+  { value: "selesai", label: "Selesai" },
+  { value: "diambil", label: "Diambil" },
+];
+
+const STATUS_CLASS = {
+  diterima: "select-info",
+  diproses: "select-warning",
+  selesai: "select-success",
+  diambil: "select-neutral",
+};
 
 let itemKeySeed = 0;
 
@@ -26,12 +42,9 @@ const newItem = (data = {}) => ({
   ...data,
 });
 
-const todayString = () => new Date().toISOString().split("T")[0];
-
 const emptyForm = () => ({
   customerId: "",
   paymentMethod: "cash",
-  orderDate: todayString(),
   items: [newItem()],
 });
 
@@ -40,10 +53,11 @@ const rupiah = (value) =>
 
 const invoiceNo = (id) => `INV-${String(id).padStart(4, "0")}`;
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString("id-ID", {
-    day: "numeric",
+// Helper format tanggal
+const formatDate = (dateString) => {
+  if (!dateString) return "-";
+  return new Date(dateString).toLocaleDateString("id-ID", {
+    day: "2-digit",
     month: "short",
     year: "numeric",
   });
@@ -53,7 +67,7 @@ function Order() {
   const [orders, setOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [services, setServices] = useState([]);
+  const [services, setServices] = useState([]); // sudah include prices
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -95,6 +109,7 @@ function Order() {
 
   const applyError = (err) => {
     console.error(err);
+
     setError(err.response?.data?.message || "Gagal mengambil data order");
   };
 
@@ -119,6 +134,7 @@ function Order() {
 
   const handleRetry = async () => {
     setLoading(true);
+
     try {
       applyData(await fetchAll());
     } catch (err) {
@@ -135,6 +151,7 @@ function Order() {
 
   // =========================================================
   // TURUNAN PER ITEM
+  // kategori -> layanan -> jenis item (harga) -> berat/pcs -> subtotal
   // =========================================================
 
   const getItemInfo = (item) => {
@@ -178,6 +195,7 @@ function Order() {
 
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
+
     setForm((prev) => ({
       ...prev,
       [name]: value,
@@ -224,6 +242,7 @@ function Order() {
       (s) => String(s.id) === String(serviceId)
     );
 
+    // kalau layanan hanya punya 1 harga, langsung dipilihkan
     const onlyPrice =
       service?.prices?.length === 1 ? String(service.prices[0].id) : "";
 
@@ -258,9 +277,6 @@ function Order() {
     setForm({
       customerId: String(order.customerId),
       paymentMethod: order.paymentMethod,
-      orderDate: order.orderDate
-        ? new Date(order.orderDate).toISOString().split("T")[0]
-        : todayString(),
       items: (order.items || []).map((item) =>
         newItem({
           categoryId: String(item.categoryId),
@@ -290,7 +306,6 @@ function Order() {
     e.preventDefault();
 
     if (!form.customerId) return setFormError("Pelanggan wajib dipilih");
-    if (!form.orderDate) return setFormError("Tanggal order wajib diisi");
 
     for (let i = 0; i < form.items.length; i++) {
       const item = form.items[i];
@@ -319,10 +334,10 @@ function Order() {
       setSaving(true);
       setFormError("");
 
+      // subtotal & total tidak dikirim: dihitung ulang oleh server
       const payload = {
         customerId: Number(form.customerId),
         paymentMethod: form.paymentMethod,
-        orderDate: form.orderDate,
         items: form.items.map((item) => ({
           servicePriceId: Number(item.servicePriceId),
           quantity: Number(item.quantity),
@@ -339,9 +354,28 @@ function Order() {
       await refreshOrders();
     } catch (err) {
       console.error(err);
+
       setFormError(err.response?.data?.message || "Gagal menyimpan order");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // =========================================================
+  // UBAH STATUS
+  // =========================================================
+
+  const handleStatusChange = async (order, status) => {
+    try {
+      await updateOrderStatus(order.id, status);
+
+      setOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? { ...o, status } : o))
+      );
+    } catch (err) {
+      console.error(err);
+
+      alert(err.response?.data?.message || "Gagal mengubah status");
     }
   };
 
@@ -361,6 +395,7 @@ function Order() {
       await refreshOrders();
     } catch (err) {
       console.error(err);
+
       alert(err.response?.data?.message || "Gagal menghapus order");
     }
   };
@@ -370,13 +405,13 @@ function Order() {
   // =========================================================
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-base-100 p-6 rounded-2xl border border-base-200 shadow-sm">
+    <div className="p-6">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Manajemen Order</h1>
-          <p className="text-sm text-base-content/70 mt-1">
-            Kelola transaksi, riwayat pemesanan, dan rincian layanan pelanggan.
+          <h1 className="text-2xl font-bold">Order</h1>
+          <p className="text-sm opacity-70 mt-1">
+            Satu order = satu invoice, bisa berisi beberapa layanan
           </p>
         </div>
 
@@ -384,414 +419,428 @@ function Order() {
           type="button"
           onClick={handleOpenCreate}
           disabled={loading || customers.length === 0 || services.length === 0}
-          className="btn btn-primary gap-2 shadow-sm font-semibold"
+          className="btn btn-primary w-fit"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Tambah Order
+          + Tambah Order
         </button>
       </div>
 
-      {/* ERROR ALERT */}
+      {/* ERROR */}
       {error && (
-        <div role="alert" className="alert alert-error shadow-sm">
-          <svg className="w-6 h-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="flex-1">{error}</span>
+        <div role="alert" className="alert alert-error mb-4">
+          <span>{error}</span>
+
           <button type="button" onClick={handleRetry} className="btn btn-sm">
             Coba lagi
           </button>
         </div>
       )}
 
-      {/* WARNING DATA MASTER */}
-      {!loading && !error && (customers.length === 0 || services.length === 0) && (
-        <div className="space-y-3">
-          {customers.length === 0 && (
-            <div role="alert" className="alert alert-warning shadow-sm text-sm">
-              <svg className="w-5 h-5 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <span>
-                Belum ada data customer. Silakan tambahkan dahulu di menu{" "}
-                <Link to="/customer" className="underline font-semibold hover:opacity-80">
-                  Customer
-                </Link>
-                .
-              </span>
-            </div>
-          )}
-
-          {services.length === 0 && (
-            <div role="alert" className="alert alert-warning shadow-sm text-sm">
-              <svg className="w-5 h-5 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <span>
-                Belum ada data layanan. Silakan tambahkan dahulu di menu{" "}
-                <Link to="/layanan" className="underline font-semibold hover:opacity-80">
-                  Layanan
-                </Link>
-                .
-              </span>
-            </div>
-          )}
+      {/* PERINGATAN DATA MASTER KOSONG */}
+      {!loading && !error && customers.length === 0 && (
+        <div role="alert" className="alert alert-warning mb-4">
+          <span>
+            Belum ada customer. Tambahkan dulu di menu{" "}
+            <Link to="/customer" className="link font-semibold">
+              Customer
+            </Link>
+            .
+          </span>
         </div>
       )}
 
-      {/* TABLE DATA */}
-      <div className="bg-base-100 border border-base-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="table table-zebra w-full">
-            <thead>
-              <tr className="bg-base-200/50 text-base-content/70 text-xs uppercase tracking-wider">
-                <th>Invoice</th>
-                <th>Tanggal</th>
-                <th>Pelanggan</th>
-                <th>Rincian Layanan</th>
-                <th>Total Price</th>
-                <th>Metode</th>
-                <th className="text-center">Aksi</th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-base-200">
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-12">
-                    <span className="loading loading-spinner loading-md text-primary"></span>
-                  </td>
-                </tr>
-              ) : orders.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-12 text-base-content/60">
-                    Belum ada order yang dicatat.
-                  </td>
-                </tr>
-              ) : (
-                orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-base-200/30 transition-colors">
-                    {/* INVOICE */}
-                    <td className="font-mono text-sm font-semibold text-primary align-top">
-                      {invoiceNo(order.id)}
-                    </td>
-
-                    {/* TANGGAL */}
-                    <td className="text-xs text-base-content/80 align-top whitespace-nowrap">
-                      {formatDate(order.orderDate || order.createdAt)}
-                    </td>
-
-                    {/* PELANGGAN */}
-                    <td className="font-medium align-top">
-                      {order.customer?.name || "-"}
-                    </td>
-
-                    {/* RINCIAN ITEM */}
-                    <td className="align-top">
-                      <div className="space-y-2">
-                        {(order.items || []).map((item) => (
-                          <div key={item.id} className="text-xs bg-base-200/40 p-2 rounded-lg border border-base-200">
-                            <div className="font-semibold text-sm">
-                              {item.service?.name || "-"}{" "}
-                              <span className="font-normal text-xs text-base-content/60">
-                                ({item.category?.name || "-"} / {item.servicePrice?.itemType || "-"})
-                              </span>
-                            </div>
-                            <div className="text-base-content/70 mt-1">
-                              {Number(item.quantity)} {item.unit} × {rupiah(item.pricePerUnit)} ={" "}
-                              <span className="font-semibold text-base-content">
-                                {rupiah(item.subtotal)}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-
-                    {/* TOTAL HARGA */}
-                    <td className="font-bold align-top whitespace-nowrap text-sm">
-                      {rupiah(order.totalPrice)}
-                    </td>
-
-                    {/* PEMBAYARAN */}
-                    <td className="align-top">
-                      <span
-                        className={`badge badge-sm font-medium capitalize ${order.paymentMethod === "cash"
-                            ? "badge-success text-success-content"
-                            : "badge-info text-info-content"
-                          }`}
-                      >
-                        {order.paymentMethod}
-                      </span>
-                    </td>
-
-                    {/* AKSI */}
-                    <td className="align-top">
-                      <div className="flex justify-center items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(order)}
-                          className="btn btn-ghost btn-xs text-warning hover:bg-warning/10"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(order)}
-                          className="btn btn-ghost btn-xs text-error hover:bg-error/10"
-                        >
-                          Hapus
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {!loading && !error && services.length === 0 && (
+        <div role="alert" className="alert alert-warning mb-4">
+          <span>
+            Belum ada layanan. Tambahkan dulu di menu{" "}
+            <Link to="/layanan" className="link font-semibold">
+              Layanan
+            </Link>
+            .
+          </span>
         </div>
+      )}
+
+      {/* TABLE */}
+      <div className="bg-base-100 border border-base-300 rounded-box overflow-x-auto">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Tanggal Order</th>
+              <th>Pelanggan</th>
+              <th>Rincian</th>
+              <th>Total</th>
+              <th>Pembayaran</th>
+              <th>Status</th>
+              <th className="text-center">Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="8" className="text-center py-10">
+                  <span className="loading loading-spinner"></span>
+                </td>
+              </tr>
+            ) : orders.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="text-center py-10 opacity-70">
+                  Belum ada order.
+                </td>
+              </tr>
+            ) : (
+              orders.map((order) => (
+                <tr key={order.id}>
+                  {/* KOLOM INVOICE */}
+                  <td className="font-mono text-sm align-top">
+                    {invoiceNo(order.id)}
+                  </td>
+
+                  {/* KOLOM TANGGAL ORDER */}
+                  <td className="text-sm align-top whitespace-nowrap">
+                    {formatDate(order.createdAt || order.orderDate || order.created_at)}
+                  </td>
+
+                  {/* KOLOM PELANGGAN */}
+                  <td className="font-semibold align-top">
+                    {order.customer?.name || "-"}
+                  </td>
+
+                  {/* KOLOM RINCIAN */}
+                  <td className="align-top">
+                    <ul className="space-y-1 text-sm">
+                      {(order.items || []).map((item) => (
+                        <li key={item.id}>
+                          <span className="font-medium">
+                            {item.service?.name || "-"}
+                          </span>{" "}
+                          <span className="opacity-70">
+                            ({item.category?.name || "-"} /{" "}
+                            {item.servicePrice?.itemType || "-"})
+                          </span>
+                          <div className="text-xs opacity-70">
+                            {Number(item.quantity)} {item.unit} x{" "}
+                            {rupiah(item.pricePerUnit)} ={" "}
+                            <span className="font-semibold">
+                              {rupiah(item.subtotal)}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+
+                  {/* KOLOM TOTAL */}
+                  <td className="font-semibold align-top whitespace-nowrap">
+                    {rupiah(order.totalPrice)}
+                  </td>
+
+                  {/* KOLOM PEMBAYARAN */}
+                  <td className="align-top">
+                    <span
+                      className={`badge ${order.paymentMethod === "cash"
+                          ? "badge-success"
+                          : "badge-info"
+                        } capitalize`}
+                    >
+                      {order.paymentMethod}
+                    </span>
+                  </td>
+
+                  {/* KOLOM STATUS */}
+                  <td className="align-top">
+                    <select
+                      value={order.status}
+                      onChange={(e) =>
+                        handleStatusChange(order, e.target.value)
+                      }
+                      className={`select select-xs w-28 ${STATUS_CLASS[order.status] || ""
+                        }`}
+                    >
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+
+                  {/* KOLOM AKSI */}
+                  <td className="align-top">
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(order)}
+                        className="btn btn-xs btn-warning btn-outline"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(order)}
+                        className="btn btn-xs btn-error btn-outline"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* MODAL FORM */}
+      {/* MODAL */}
       {showModal && (
-        <div className="modal modal-open backdrop-blur-sm">
-          <div className="modal-box max-w-3xl rounded-2xl shadow-2xl p-6">
-            <div className="flex items-center justify-between pb-4 border-b border-base-200 mb-4">
-              <h2 className="text-lg font-bold">
-                {editing ? `Edit Order #${invoiceNo(editing.id)}` : "Tambah Order Baru"}
-              </h2>
-              <button
-                onClick={handleCloseModal}
-                className="btn btn-sm btn-circle btn-ghost"
-              >
-                ✕
-              </button>
-            </div>
+        <div className="modal modal-open">
+          <div className="modal-box max-w-3xl">
+            <h2 className="text-lg font-bold mb-4">
+              {editing
+                ? `Edit Order ${invoiceNo(editing.id)}`
+                : "Tambah Order"}
+            </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {formError && (
-                <div role="alert" className="alert alert-error text-sm p-3 rounded-xl">
+                <div role="alert" className="alert alert-error text-sm">
                   <span>{formError}</span>
                 </div>
               )}
 
-              {/* DATA UTAMA */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="form-control">
-                  <label className="label text-xs font-semibold">Nama Pelanggan</label>
-                  <select
-                    name="customerId"
-                    value={form.customerId}
-                    onChange={handleFieldChange}
-                    className="select select-bordered select-sm w-full focus:outline-none"
-                  >
-                    <option value="">Pilih pelanggan</option>
-                    {customers.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} ({c.phone})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* PELANGGAN */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Nama Pelanggan
+                </label>
 
-                <div className="form-control">
-                  <label className="label text-xs font-semibold">Tanggal Order</label>
-                  <input
-                    type="date"
-                    name="orderDate"
-                    value={form.orderDate}
-                    onChange={handleFieldChange}
-                    className="input input-bordered input-sm w-full focus:outline-none"
-                  />
-                </div>
+                <select
+                  name="customerId"
+                  value={form.customerId}
+                  onChange={handleFieldChange}
+                  className="select w-full"
+                >
+                  <option value="">Pilih pelanggan</option>
+
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} - {c.phone}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* ITEM LAYANAN */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-base-content/70">
-                    Rincian Layanan
-                  </h3>
+                  <h3 className="text-sm font-semibold">Item Layanan</h3>
+
                   <button
                     type="button"
                     onClick={handleAddItem}
-                    className="btn btn-xs btn-outline btn-primary gap-1"
+                    className="btn btn-sm btn-outline btn-primary"
                   >
                     + Tambah Item
                   </button>
                 </div>
 
-                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                  {form.items.map((item, index) => {
-                    const info = getItemInfo(item);
+                {form.items.map((item, index) => {
+                  const info = getItemInfo(item);
 
-                    return (
-                      <div
-                        key={item.key}
-                        className="bg-base-200/40 border border-base-200 rounded-xl p-4 space-y-3 relative"
-                      >
-                        <div className="flex items-center justify-between pb-2 border-b border-base-200/60">
-                          <span className="text-xs font-bold text-primary">
-                            Item #{index + 1}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(item.key)}
-                            disabled={form.items.length === 1}
-                            className="btn btn-xs btn-circle btn-ghost text-error disabled:opacity-30"
-                            title="Hapus Item"
+                  return (
+                    <div
+                      key={item.key}
+                      className="border border-base-300 rounded-box p-4 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold">
+                          Item {index + 1}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(item.key)}
+                          disabled={form.items.length === 1}
+                          className="btn btn-xs btn-error btn-outline"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* KATEGORI */}
+                        <div>
+                          <label className="block text-xs font-medium mb-1">
+                            Kategori Layanan
+                          </label>
+
+                          <select
+                            value={item.categoryId}
+                            onChange={(e) =>
+                              handleCategoryChange(item.key, e.target.value)
+                            }
+                            className="select w-full"
                           >
-                            ✕
-                          </button>
+                            <option value="">Pilih kategori</option>
+
+                            {categories.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {/* KATEGORI */}
-                          <div>
-                            <label className="label text-[11px] font-medium py-1">Kategori</label>
-                            <select
-                              value={item.categoryId}
-                              onChange={(e) => handleCategoryChange(item.key, e.target.value)}
-                              className="select select-bordered select-xs w-full"
-                            >
-                              <option value="">Pilih kategori</option>
-                              {categories.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                        {/* LAYANAN (mengikuti kategori) */}
+                        <div>
+                          <label className="block text-xs font-medium mb-1">
+                            Layanan
+                          </label>
 
-                          {/* LAYANAN */}
-                          <div>
-                            <label className="label text-[11px] font-medium py-1">Layanan</label>
-                            <select
-                              value={item.serviceId}
-                              onChange={(e) => handleServiceChange(item.key, e.target.value)}
-                              disabled={!item.categoryId}
-                              className="select select-bordered select-xs w-full"
-                            >
-                              <option value="">
-                                {!item.categoryId
-                                  ? "Pilih kategori dulu"
-                                  : info.filteredServices.length === 0
-                                    ? "Kosong"
-                                    : "Pilih layanan"}
+                          <select
+                            value={item.serviceId}
+                            onChange={(e) =>
+                              handleServiceChange(item.key, e.target.value)
+                            }
+                            disabled={!item.categoryId}
+                            className="select w-full"
+                          >
+                            <option value="">
+                              {!item.categoryId
+                                ? "Pilih kategori dulu"
+                                : info.filteredServices.length === 0
+                                  ? "Belum ada layanan di kategori ini"
+                                  : "Pilih layanan"}
+                            </option>
+
+                            {info.filteredServices.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name}
                               </option>
-                              {info.filteredServices.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                  {s.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* JENIS ITEM / HARGA */}
-                          <div>
-                            <label className="label text-[11px] font-medium py-1">Jenis Item</label>
-                            <select
-                              value={item.servicePriceId}
-                              onChange={(e) => handlePriceChange(item.key, e.target.value)}
-                              disabled={!item.serviceId}
-                              className="select select-bordered select-xs w-full"
-                            >
-                              <option value="">
-                                {!item.serviceId
-                                  ? "Pilih layanan dulu"
-                                  : info.priceOptions.length === 0
-                                    ? "Tidak ada pilihan harga"
-                                    : "Pilih jenis item"}
-                              </option>
-                              {info.priceOptions.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                  {p.itemType} ({rupiah(p.price)}/{p.unit})
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* QUANTITY */}
-                          <div>
-                            <label className="label text-[11px] font-medium py-1">
-                              {info.unit === "pcs"
-                                ? "Jumlah (pcs)"
-                                : info.unit === "kg"
-                                  ? "Berat (kg)"
-                                  : "Jumlah / Berat"}
-                            </label>
-                            <input
-                              type="number"
-                              value={item.quantity}
-                              onChange={(e) =>
-                                updateItem(item.key, { quantity: e.target.value })
-                              }
-                              disabled={!item.servicePriceId}
-                              min={info.unit === "pcs" ? "1" : "0.1"}
-                              step={info.unit === "pcs" ? "1" : "0.1"}
-                              placeholder={info.unit === "pcs" ? "Contoh: 3" : "Contoh: 2.5"}
-                              className="input input-bordered input-xs w-full"
-                            />
-                          </div>
+                            ))}
+                          </select>
                         </div>
 
-                        {/* SUBTOTAL ITEM */}
-                        <div className="flex justify-end items-center gap-2 pt-1 text-xs">
-                          <span className="text-base-content/60">Subtotal:</span>
-                          <span className="font-bold text-base-content">
-                            {info.subtotal > 0 ? rupiah(info.subtotal) : "Rp 0"}
-                          </span>
+                        {/* JENIS ITEM / HARGA */}
+                        <div>
+                          <label className="block text-xs font-medium mb-1">
+                            Jenis Item
+                          </label>
+
+                          <select
+                            value={item.servicePriceId}
+                            onChange={(e) =>
+                              handlePriceChange(item.key, e.target.value)
+                            }
+                            disabled={!item.serviceId}
+                            className="select w-full"
+                          >
+                            <option value="">
+                              {!item.serviceId
+                                ? "Pilih layanan dulu"
+                                : info.priceOptions.length === 0
+                                  ? "Layanan ini belum punya harga"
+                                  : "Pilih jenis item"}
+                            </option>
+
+                            {info.priceOptions.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.itemType} - {rupiah(p.price)} / {p.unit}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* BERAT / PCS */}
+                        <div>
+                          <label className="block text-xs font-medium mb-1">
+                            {info.unit === "pcs"
+                              ? "Jumlah (pcs)"
+                              : info.unit === "kg"
+                                ? "Berat (kg)"
+                                : "Berat / Pcs"}
+                          </label>
+
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) =>
+                              updateItem(item.key, {
+                                quantity: e.target.value,
+                              })
+                            }
+                            disabled={!item.servicePriceId}
+                            min={info.unit === "pcs" ? "1" : "0.1"}
+                            step={info.unit === "pcs" ? "1" : "0.1"}
+                            placeholder={
+                              info.unit === "pcs"
+                                ? "Contoh: 3"
+                                : "Contoh: 2.5"
+                            }
+                            className="input w-full"
+                          />
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      {/* SUBTOTAL OTOMATIS */}
+                      <div className="flex justify-between text-sm">
+                        <span className="opacity-70">Subtotal</span>
+
+                        <span className="font-semibold">
+                          {info.subtotal > 0
+                            ? rupiah(info.subtotal)
+                            : "-"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* METODE & TOTAL */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center pt-2">
-                <div>
-                  <label className="label text-xs font-semibold py-1">Metode Pembayaran</label>
-                  <select
-                    name="paymentMethod"
-                    value={form.paymentMethod}
-                    onChange={handleFieldChange}
-                    className="select select-bordered select-sm w-full"
-                  >
-                    <option value="cash">Cash (Tunai)</option>
-                    <option value="transfer">Transfer Bank</option>
-                  </select>
-                </div>
+              {/* TOTAL */}
+              <div className="flex justify-between items-center rounded-box bg-base-200 px-4 py-3">
+                <span className="font-semibold">Total Harga</span>
 
-                <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex justify-between items-center">
-                  <span className="text-xs font-semibold text-primary">Total Harga:</span>
-                  <span className="text-lg font-black text-primary">{rupiah(grandTotal)}</span>
-                </div>
+                <span className="text-lg font-bold">
+                  {rupiah(grandTotal)}
+                </span>
               </div>
 
-              {/* FOOTER MODAL */}
-              <div className="modal-action border-t border-base-200 pt-4 mt-6">
+              {/* METODE PEMBAYARAN */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Metode Pembayaran
+                </label>
+
+                <select
+                  name="paymentMethod"
+                  value={form.paymentMethod}
+                  onChange={handleFieldChange}
+                  className="select w-full"
+                >
+                  <option value="cash">Cash</option>
+                  <option value="transfer">Transfer</option>
+                </select>
+              </div>
+
+              <div className="modal-action">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="btn btn-sm btn-ghost"
+                  className="btn"
                 >
                   Batal
                 </button>
+
                 <button
                   type="submit"
                   disabled={saving}
-                  className="btn btn-sm btn-primary min-w-[100px]"
+                  className="btn btn-primary"
                 >
-                  {saving ? (
-                    <span className="loading loading-spinner loading-xs"></span>
-                  ) : editing ? (
-                    "Update Order"
-                  ) : (
-                    "Simpan Order"
-                  )}
+                  {saving ? "Menyimpan..." : editing ? "Update" : "Simpan"}
                 </button>
               </div>
             </form>
