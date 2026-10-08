@@ -8,6 +8,7 @@ import Users from "./pages/Users";
 import Layanan from "./pages/Layanan";
 import Order from "./pages/Order";
 import Customer from "./pages/Customer";
+import Pengeluaran from "./pages/Pengeluaran";
 
 function App() {
   return (
@@ -54,11 +55,7 @@ function App() {
 
           <Route
             path="/pengeluaran"
-            element={
-              <h1 className="text-2xl font-bold">
-                Pengeluaran
-              </h1>
-            }
+            element={<Pengeluaran />}
           />
 
           <Route
