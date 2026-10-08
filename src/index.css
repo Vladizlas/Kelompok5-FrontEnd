@@ -1,2 +1,11 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+@layer base {
+    body {
+        background-color: #f4f8fb;
+        /* Background aplikasi lembut */
+        color: #1e293b;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+}

@@ -1,408 +1,805 @@
-import React, { useState } from "react";
-import { Plus, Trash2, ShoppingBag, User, Calculator, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-export default function Order() {
-  // Master Data Dummy Customer (Nanti di-fetch dari API /api/customers)
-  const masterCustomers = [
-    { id: 1, nama: "Budi Santoso", no_telp: "081234567890", alamat: "Jl. Mawar No. 12" },
-    { id: 2, nama: "Siti Aminah", no_telp: "085712345678", alamat: "Jl. Melati No. 5" },
-    { id: 3, nama: "Ahmad Rizki", no_telp: "081987654321", alamat: "Jl. Anggrek No. 8" },
-  ];
+import {
+  getOrders,
+  createOrder,
+  updateOrder,
+  deleteOrder,
+} from "../services/orderApi";
+import { getCustomers } from "../services/customerApi";
+import { getCategories } from "../services/categoryServiceApi";
+import { getServices } from "../services/serviceApi";
 
-  // Master Data Dummy Kategori & Layanan
-  const masterCategories = [
-    { id: 1, nama: "Cuci Gosok" },
-    { id: 2, nama: "Gosok" },
-    { id: 3, nama: "Cuci" },
-    { id: 4, nama: "Cuci Kiloan" },
-  ];
+// ---------------------------------------------------------
+// HELPER
+// ---------------------------------------------------------
 
-  const masterServices = [
-    { id: 101, categoryId: 1, nama: "Pakaian", harga: 6000, satuan: "kg" },
-    { id: 102, categoryId: 1, nama: "Bed Cover", harga: 10000, satuan: "kg" },
-    { id: 103, categoryId: 2, nama: "Pakaian", harga: 4000, satuan: "kg" },
-    { id: 104, categoryId: 2, nama: "Bed Cover", harga: 7000, satuan: "kg" },
-    { id: 105, categoryId: 3, nama: "Handuk", harga: 7000, satuan: "pcs" },
-    { id: 106, categoryId: 4, nama: "Pakaian", harga: 4000, satuan: "kg" },
-    { id: 107, categoryId: 4, nama: "Bed Cover", harga: 7000, satuan: "kg" },
-  ];
+let itemKeySeed = 0;
 
-  // State Customer & ID Terpilih
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
-  const [customer, setCustomer] = useState({
-    nama: "",
-    no_telp: "",
-    alamat: "",
+const newItem = (data = {}) => ({
+  key: ++itemKeySeed,
+  categoryId: "",
+  serviceId: "",
+  servicePriceId: "",
+  quantity: "",
+  ...data,
+});
+
+const todayString = () => new Date().toISOString().split("T")[0];
+
+const emptyForm = () => ({
+  customerId: "",
+  paymentMethod: "cash",
+  orderDate: todayString(),
+  items: [newItem()],
+});
+
+const rupiah = (value) =>
+  `Rp ${Number(value || 0).toLocaleString("id-ID")}`;
+
+const invoiceNo = (id) => `INV-${String(id).padStart(4, "0")}`;
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return "-";
+  return new Date(dateStr).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
+};
 
-  // State Form Layanan
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [selectedServiceId, setSelectedServiceId] = useState("");
-  const [qty, setQty] = useState(1);
-  const [cart, setCart] = useState([]);
-  const [metodePembayaran, setMetodePembayaran] = useState("cash");
+function Order() {
+  const [orders, setOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [services, setServices] = useState([]);
 
-  // Handler saat pelanggan dipilih dari Dropdown
-  const handleSelectCustomer = (e) => {
-    const customerId = e.target.value;
-    setSelectedCustomerId(customerId);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    if (customerId === "") {
-      // Reset form jika pilih "Pelanggan Baru"
-      setCustomer({ nama: "", no_telp: "", alamat: "" });
-    } else {
-      // Cari dan isi otomatis data customer ke state
-      const selected = masterCustomers.find((c) => c.id === parseInt(customerId));
-      if (selected) {
-        setCustomer({
-          nama: selected.nama,
-          no_telp: selected.no_telp,
-          alamat: selected.alamat,
-        });
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  // =========================================================
+  // FETCH
+  // =========================================================
+
+  const fetchAll = async () => {
+    const [ordersRes, customersRes, categoriesRes, servicesRes] =
+      await Promise.all([
+        getOrders(),
+        getCustomers(),
+        getCategories(),
+        getServices(),
+      ]);
+
+    return {
+      orders: ordersRes.data || [],
+      customers: customersRes.data || [],
+      categories: categoriesRes.data || [],
+      services: servicesRes.data || [],
+    };
+  };
+
+  const applyData = (data) => {
+    setOrders(data.orders);
+    setCustomers(data.customers);
+    setCategories(data.categories);
+    setServices(data.services);
+    setError("");
+  };
+
+  const applyError = (err) => {
+    console.error(err);
+    setError(err.response?.data?.message || "Gagal mengambil data order");
+  };
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetchAll()
+      .then((data) => {
+        if (!ignore) applyData(data);
+      })
+      .catch((err) => {
+        if (!ignore) applyError(err);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const handleRetry = async () => {
+    setLoading(true);
+    try {
+      applyData(await fetchAll());
+    } catch (err) {
+      applyError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshOrders = async () => {
+    const result = await getOrders();
+    setOrders(result.data || []);
+  };
+
+  // =========================================================
+  // TURUNAN PER ITEM
+  // =========================================================
+
+  const getItemInfo = (item) => {
+    const filteredServices = services.filter(
+      (s) => String(s.categoryId) === String(item.categoryId)
+    );
+
+    const selectedService = services.find(
+      (s) => String(s.id) === String(item.serviceId)
+    );
+
+    const priceOptions = selectedService?.prices || [];
+
+    const selectedPrice = priceOptions.find(
+      (p) => String(p.id) === String(item.servicePriceId)
+    );
+
+    const qty = Number(item.quantity);
+
+    return {
+      filteredServices,
+      priceOptions,
+      selectedPrice,
+      unit: selectedPrice?.unit,
+      qty,
+      subtotal:
+        selectedPrice && qty > 0
+          ? Math.round(selectedPrice.price * qty)
+          : 0,
+    };
+  };
+
+  const grandTotal = form.items.reduce(
+    (sum, item) => sum + getItemInfo(item).subtotal,
+    0
+  );
+
+  // =========================================================
+  // FORM HANDLER
+  // =========================================================
+
+  const handleFieldChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const updateItem = (key, patch) => {
+    setForm((prev) => ({
+      ...prev,
+      items: prev.items.map((item) =>
+        item.key === key ? { ...item, ...patch } : item
+      ),
+    }));
+  };
+
+  const handleAddItem = () => {
+    setForm((prev) => ({
+      ...prev,
+      items: [...prev.items, newItem()],
+    }));
+  };
+
+  const handleRemoveItem = (key) => {
+    setForm((prev) => ({
+      ...prev,
+      items:
+        prev.items.length === 1
+          ? prev.items
+          : prev.items.filter((item) => item.key !== key),
+    }));
+  };
+
+  const handleCategoryChange = (key, categoryId) => {
+    updateItem(key, {
+      categoryId,
+      serviceId: "",
+      servicePriceId: "",
+      quantity: "",
+    });
+  };
+
+  const handleServiceChange = (key, serviceId) => {
+    const service = services.find(
+      (s) => String(s.id) === String(serviceId)
+    );
+
+    const onlyPrice =
+      service?.prices?.length === 1 ? String(service.prices[0].id) : "";
+
+    updateItem(key, {
+      serviceId,
+      servicePriceId: onlyPrice,
+      quantity: "",
+    });
+  };
+
+  const handlePriceChange = (key, servicePriceId) => {
+    updateItem(key, {
+      servicePriceId,
+      quantity: "",
+    });
+  };
+
+  // =========================================================
+  // MODAL
+  // =========================================================
+
+  const handleOpenCreate = () => {
+    setEditing(null);
+    setForm(emptyForm());
+    setFormError("");
+    setShowModal(true);
+  };
+
+  const handleOpenEdit = (order) => {
+    setEditing(order);
+
+    setForm({
+      customerId: String(order.customerId),
+      paymentMethod: order.paymentMethod,
+      orderDate: order.orderDate
+        ? new Date(order.orderDate).toISOString().split("T")[0]
+        : todayString(),
+      items: (order.items || []).map((item) =>
+        newItem({
+          categoryId: String(item.categoryId),
+          serviceId: String(item.serviceId),
+          servicePriceId: String(item.servicePriceId),
+          quantity: String(Number(item.quantity)),
+        })
+      ),
+    });
+
+    setFormError("");
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditing(null);
+    setForm(emptyForm());
+    setFormError("");
+  };
+
+  // =========================================================
+  // SUBMIT
+  // =========================================================
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!form.customerId) return setFormError("Pelanggan wajib dipilih");
+    if (!form.orderDate) return setFormError("Tanggal order wajib diisi");
+
+    for (let i = 0; i < form.items.length; i++) {
+      const item = form.items[i];
+      const info = getItemInfo(item);
+      const no = i + 1;
+
+      if (!item.categoryId)
+        return setFormError(`Item ${no}: kategori layanan wajib dipilih`);
+      if (!item.serviceId)
+        return setFormError(`Item ${no}: layanan wajib dipilih`);
+      if (!item.servicePriceId)
+        return setFormError(`Item ${no}: jenis item wajib dipilih`);
+
+      if (!(info.qty > 0)) {
+        return setFormError(
+          `Item ${no}: ${info.unit === "pcs" ? "jumlah" : "berat"} harus lebih dari 0`
+        );
+      }
+
+      if (info.unit === "pcs" && !Number.isInteger(info.qty)) {
+        return setFormError(`Item ${no}: jumlah pcs harus bilangan bulat`);
       }
     }
-  };
 
-  // Filter Layanan Berdasarkan Kategori
-  const availableServices = masterServices.filter(
-    (s) => s.categoryId === parseInt(selectedCategoryId)
-  );
+    try {
+      setSaving(true);
+      setFormError("");
 
-  // Cari Layanan Terpilih
-  const currentService = masterServices.find(
-    (s) => s.id === parseInt(selectedServiceId)
-  );
+      const payload = {
+        customerId: Number(form.customerId),
+        paymentMethod: form.paymentMethod,
+        orderDate: form.orderDate,
+        items: form.items.map((item) => ({
+          servicePriceId: Number(item.servicePriceId),
+          quantity: Number(item.quantity),
+        })),
+      };
 
-  // Hitung Subtotal Otomatis
-  const currentSubtotal = currentService ? currentService.harga * qty : 0;
+      if (editing) {
+        await updateOrder(editing.id, payload);
+      } else {
+        await createOrder(payload);
+      }
 
-  // Tambah Layanan ke Keranjang
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    if (!currentService || qty <= 0) return;
-
-    const existingIndex = cart.findIndex((item) => item.id === currentService.id);
-
-    if (existingIndex > -1) {
-      const updatedCart = [...cart];
-      updatedCart[existingIndex].qty += parseFloat(qty);
-      updatedCart[existingIndex].subtotal = updatedCart[existingIndex].qty * updatedCart[existingIndex].harga;
-      setCart(updatedCart);
-    } else {
-      setCart([
-        ...cart,
-        {
-          ...currentService,
-          categoryName: masterCategories.find((c) => c.id === parseInt(selectedCategoryId))?.nama,
-          qty: parseFloat(qty),
-          subtotal: currentSubtotal,
-        },
-      ]);
+      handleCloseModal();
+      await refreshOrders();
+    } catch (err) {
+      console.error(err);
+      setFormError(err.response?.data?.message || "Gagal menyimpan order");
+    } finally {
+      setSaving(false);
     }
-
-    setSelectedServiceId("");
-    setQty(1);
   };
 
-  // Hapus Item
-  const handleRemoveItem = (id) => {
-    setCart(cart.filter((item) => item.id !== id));
-  };
+  // =========================================================
+  // DELETE
+  // =========================================================
 
-  // Grand Total Transaksi
-  const grandTotal = cart.reduce((acc, item) => acc + item.subtotal, 0);
+  const handleDelete = async (order) => {
+    const confirmed = window.confirm(
+      `Yakin ingin menghapus invoice ${invoiceNo(order.id)}?`
+    );
 
-  // Submit Transaksi Ke Backend
-  const handleSubmitOrder = async (e) => {
-    e.preventDefault();
-    if (!customer.nama || !customer.no_telp) {
-      alert("Harap isi nama dan nomor telepon pelanggan!");
-      return;
+    if (!confirmed) return;
+
+    try {
+      await deleteOrder(order.id);
+      await refreshOrders();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Gagal menghapus order");
     }
-    if (cart.length === 0) {
-      alert("Harap pilih minimal satu layanan!");
-      return;
-    }
-
-    const payload = {
-      customer,
-      items: cart,
-      grandTotal,
-      metodePembayaran,
-    };
-
-    console.log("Data Order Dikirim:", payload);
-    alert("Transaksi Order Berhasil Disimpan!");
-
-    // Reset Form
-    setSelectedCustomerId("");
-    setCustomer({ nama: "", no_telp: "", alamat: "" });
-    setCart([]);
-    setSelectedCategoryId("");
   };
+
+  // =========================================================
+  // RENDER
+  // =========================================================
 
   return (
-    <div className="p-6 bg-[#0f172a] text-slate-100 min-h-screen space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Buat Order Baru</h1>
-        <p className="text-slate-400 text-sm">Kelola pendaftaran pelanggan dan transaksi laundry.</p>
+    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-base-100 p-6 rounded-2xl border border-base-200 shadow-sm">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Manajemen Order</h1>
+          <p className="text-sm text-base-content/70 mt-1">
+            Kelola transaksi, riwayat pemesanan, dan rincian layanan pelanggan.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleOpenCreate}
+          disabled={loading || customers.length === 0 || services.length === 0}
+          className="btn btn-primary gap-2 shadow-sm font-semibold"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Tambah Order
+        </button>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* KOLOM KIRI: CUSTOMER & PILIH LAYANAN */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* DATA CUSTOMER */}
-          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-400" />
-              Data Pelanggan (Customer)
-            </h2>
+      {/* ERROR ALERT */}
+      {error && (
+        <div role="alert" className="alert alert-error shadow-sm">
+          <svg className="w-6 h-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="flex-1">{error}</span>
+          <button type="button" onClick={handleRetry} className="btn btn-sm">
+            Coba lagi
+          </button>
+        </div>
+      )}
 
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* Dropdown Pilih Pelanggan Terdaftar */}
-              <div className="md:col-span-2">
-                <label className="text-xs text-slate-400 block mb-1">Cari / Pilih Pelanggan Terdaftar</label>
-                <select
-                  value={selectedCustomerId}
-                  onChange={handleSelectCustomer}
-                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                >
-                  <option value="">-- Pelanggan Baru (Isi Manual) --</option>
-                  {masterCustomers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nama} ({c.no_telp})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Nama Pelanggan *</label>
-                <input
-                  type="text"
-                  placeholder="Nama Pelanggan"
-                  value={customer.nama}
-                  onChange={(e) => {
-                    setSelectedCustomerId("");
-                    setCustomer({ ...customer, nama: e.target.value });
-                  }}
-                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">No. Telepon / WA *</label>
-                <input
-                  type="text"
-                  placeholder="0812xxxxxxxx"
-                  value={customer.no_telp}
-                  onChange={(e) => {
-                    setSelectedCustomerId("");
-                    setCustomer({ ...customer, no_telp: e.target.value });
-                  }}
-                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="text-xs text-slate-400 block mb-1">Alamat Pelanggan</label>
-                <textarea
-                  rows="2"
-                  placeholder="Alamat lengkap pelanggan"
-                  value={customer.alamat}
-                  onChange={(e) => {
-                    setSelectedCustomerId("");
-                    setCustomer({ ...customer, alamat: e.target.value });
-                  }}
-                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                ></textarea>
-              </div>
+      {/* WARNING DATA MASTER */}
+      {!loading && !error && (customers.length === 0 || services.length === 0) && (
+        <div className="space-y-3">
+          {customers.length === 0 && (
+            <div role="alert" className="alert alert-warning shadow-sm text-sm">
+              <svg className="w-5 h-5 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>
+                Belum ada data customer. Silakan tambahkan dahulu di menu{" "}
+                <Link to="/customer" className="underline font-semibold hover:opacity-80">
+                  Customer
+                </Link>
+                .
+              </span>
             </div>
-          </div>
+          )}
 
-          {/* FORM PILIH LAYANAN */}
-          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-blue-400" />
-              Pilih Kategori & Layanan
-            </h2>
+          {services.length === 0 && (
+            <div role="alert" className="alert alert-warning shadow-sm text-sm">
+              <svg className="w-5 h-5 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>
+                Belum ada data layanan. Silakan tambahkan dahulu di menu{" "}
+                <Link to="/layanan" className="underline font-semibold hover:opacity-80">
+                  Layanan
+                </Link>
+                .
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
-            <form onSubmit={handleAddToCart} className="grid md:grid-cols-12 gap-3 items-end">
-              <div className="md:col-span-4">
-                <label className="text-xs text-slate-400 block mb-1">Kategori Layanan</label>
-                <select
-                  value={selectedCategoryId}
-                  onChange={(e) => {
-                    setSelectedCategoryId(e.target.value);
-                    setSelectedServiceId("");
-                  }}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+      {/* TABLE DATA */}
+      <div className="bg-base-100 border border-base-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="table table-zebra w-full">
+            <thead>
+              <tr className="bg-base-200/50 text-base-content/70 text-xs uppercase tracking-wider">
+                <th>Invoice</th>
+                <th>Tanggal</th>
+                <th>Pelanggan</th>
+                <th>Rincian Layanan</th>
+                <th>Total Price</th>
+                <th>Metode</th>
+                <th className="text-center">Aksi</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-base-200">
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-12">
+                    <span className="loading loading-spinner loading-md text-primary"></span>
+                  </td>
+                </tr>
+              ) : orders.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-12 text-base-content/60">
+                    Belum ada order yang dicatat.
+                  </td>
+                </tr>
+              ) : (
+                orders.map((order) => (
+                  <tr key={order.id} className="hover:bg-base-200/30 transition-colors">
+                    {/* INVOICE */}
+                    <td className="font-mono text-sm font-semibold text-primary align-top">
+                      {invoiceNo(order.id)}
+                    </td>
+
+                    {/* TANGGAL */}
+                    <td className="text-xs text-base-content/80 align-top whitespace-nowrap">
+                      {formatDate(order.orderDate || order.createdAt)}
+                    </td>
+
+                    {/* PELANGGAN */}
+                    <td className="font-medium align-top">
+                      {order.customer?.name || "-"}
+                    </td>
+
+                    {/* RINCIAN ITEM */}
+                    <td className="align-top">
+                      <div className="space-y-2">
+                        {(order.items || []).map((item) => (
+                          <div key={item.id} className="text-xs bg-base-200/40 p-2 rounded-lg border border-base-200">
+                            <div className="font-semibold text-sm">
+                              {item.service?.name || "-"}{" "}
+                              <span className="font-normal text-xs text-base-content/60">
+                                ({item.category?.name || "-"} / {item.servicePrice?.itemType || "-"})
+                              </span>
+                            </div>
+                            <div className="text-base-content/70 mt-1">
+                              {Number(item.quantity)} {item.unit} × {rupiah(item.pricePerUnit)} ={" "}
+                              <span className="font-semibold text-base-content">
+                                {rupiah(item.subtotal)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+
+                    {/* TOTAL HARGA */}
+                    <td className="font-bold align-top whitespace-nowrap text-sm">
+                      {rupiah(order.totalPrice)}
+                    </td>
+
+                    {/* PEMBAYARAN */}
+                    <td className="align-top">
+                      <span
+                        className={`badge badge-sm font-medium capitalize ${order.paymentMethod === "cash"
+                            ? "badge-success text-success-content"
+                            : "badge-info text-info-content"
+                          }`}
+                      >
+                        {order.paymentMethod}
+                      </span>
+                    </td>
+
+                    {/* AKSI */}
+                    <td className="align-top">
+                      <div className="flex justify-center items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(order)}
+                          className="btn btn-ghost btn-xs text-warning hover:bg-warning/10"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(order)}
+                          className="btn btn-ghost btn-xs text-error hover:bg-error/10"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* MODAL FORM */}
+      {showModal && (
+        <div className="modal modal-open backdrop-blur-sm">
+          <div className="modal-box max-w-3xl rounded-2xl shadow-2xl p-6">
+            <div className="flex items-center justify-between pb-4 border-b border-base-200 mb-4">
+              <h2 className="text-lg font-bold">
+                {editing ? `Edit Order #${invoiceNo(editing.id)}` : "Tambah Order Baru"}
+              </h2>
+              <button
+                onClick={handleCloseModal}
+                className="btn btn-sm btn-circle btn-ghost"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {formError && (
+                <div role="alert" className="alert alert-error text-sm p-3 rounded-xl">
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              {/* DATA UTAMA */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="form-control">
+                  <label className="label text-xs font-semibold">Nama Pelanggan</label>
+                  <select
+                    name="customerId"
+                    value={form.customerId}
+                    onChange={handleFieldChange}
+                    className="select select-bordered select-sm w-full focus:outline-none"
+                  >
+                    <option value="">Pilih pelanggan</option>
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.phone})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-control">
+                  <label className="label text-xs font-semibold">Tanggal Order</label>
+                  <input
+                    type="date"
+                    name="orderDate"
+                    value={form.orderDate}
+                    onChange={handleFieldChange}
+                    className="input input-bordered input-sm w-full focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* ITEM LAYANAN */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-base-content/70">
+                    Rincian Layanan
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={handleAddItem}
+                    className="btn btn-xs btn-outline btn-primary gap-1"
+                  >
+                    + Tambah Item
+                  </button>
+                </div>
+
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                  {form.items.map((item, index) => {
+                    const info = getItemInfo(item);
+
+                    return (
+                      <div
+                        key={item.key}
+                        className="bg-base-200/40 border border-base-200 rounded-xl p-4 space-y-3 relative"
+                      >
+                        <div className="flex items-center justify-between pb-2 border-b border-base-200/60">
+                          <span className="text-xs font-bold text-primary">
+                            Item #{index + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(item.key)}
+                            disabled={form.items.length === 1}
+                            className="btn btn-xs btn-circle btn-ghost text-error disabled:opacity-30"
+                            title="Hapus Item"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* KATEGORI */}
+                          <div>
+                            <label className="label text-[11px] font-medium py-1">Kategori</label>
+                            <select
+                              value={item.categoryId}
+                              onChange={(e) => handleCategoryChange(item.key, e.target.value)}
+                              className="select select-bordered select-xs w-full"
+                            >
+                              <option value="">Pilih kategori</option>
+                              {categories.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* LAYANAN */}
+                          <div>
+                            <label className="label text-[11px] font-medium py-1">Layanan</label>
+                            <select
+                              value={item.serviceId}
+                              onChange={(e) => handleServiceChange(item.key, e.target.value)}
+                              disabled={!item.categoryId}
+                              className="select select-bordered select-xs w-full"
+                            >
+                              <option value="">
+                                {!item.categoryId
+                                  ? "Pilih kategori dulu"
+                                  : info.filteredServices.length === 0
+                                    ? "Kosong"
+                                    : "Pilih layanan"}
+                              </option>
+                              {info.filteredServices.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* JENIS ITEM / HARGA */}
+                          <div>
+                            <label className="label text-[11px] font-medium py-1">Jenis Item</label>
+                            <select
+                              value={item.servicePriceId}
+                              onChange={(e) => handlePriceChange(item.key, e.target.value)}
+                              disabled={!item.serviceId}
+                              className="select select-bordered select-xs w-full"
+                            >
+                              <option value="">
+                                {!item.serviceId
+                                  ? "Pilih layanan dulu"
+                                  : info.priceOptions.length === 0
+                                    ? "Tidak ada pilihan harga"
+                                    : "Pilih jenis item"}
+                              </option>
+                              {info.priceOptions.map((p) => (
+                                <option key={p.id} value={p.id}>
+                                  {p.itemType} ({rupiah(p.price)}/{p.unit})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* QUANTITY */}
+                          <div>
+                            <label className="label text-[11px] font-medium py-1">
+                              {info.unit === "pcs"
+                                ? "Jumlah (pcs)"
+                                : info.unit === "kg"
+                                  ? "Berat (kg)"
+                                  : "Jumlah / Berat"}
+                            </label>
+                            <input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) =>
+                                updateItem(item.key, { quantity: e.target.value })
+                              }
+                              disabled={!item.servicePriceId}
+                              min={info.unit === "pcs" ? "1" : "0.1"}
+                              step={info.unit === "pcs" ? "1" : "0.1"}
+                              placeholder={info.unit === "pcs" ? "Contoh: 3" : "Contoh: 2.5"}
+                              className="input input-bordered input-xs w-full"
+                            />
+                          </div>
+                        </div>
+
+                        {/* SUBTOTAL ITEM */}
+                        <div className="flex justify-end items-center gap-2 pt-1 text-xs">
+                          <span className="text-base-content/60">Subtotal:</span>
+                          <span className="font-bold text-base-content">
+                            {info.subtotal > 0 ? rupiah(info.subtotal) : "Rp 0"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* METODE & TOTAL */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center pt-2">
+                <div>
+                  <label className="label text-xs font-semibold py-1">Metode Pembayaran</label>
+                  <select
+                    name="paymentMethod"
+                    value={form.paymentMethod}
+                    onChange={handleFieldChange}
+                    className="select select-bordered select-sm w-full"
+                  >
+                    <option value="cash">Cash (Tunai)</option>
+                    <option value="transfer">Transfer Bank</option>
+                  </select>
+                </div>
+
+                <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex justify-between items-center">
+                  <span className="text-xs font-semibold text-primary">Total Harga:</span>
+                  <span className="text-lg font-black text-primary">{rupiah(grandTotal)}</span>
+                </div>
+              </div>
+
+              {/* FOOTER MODAL */}
+              <div className="modal-action border-t border-base-200 pt-4 mt-6">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="btn btn-sm btn-ghost"
                 >
-                  <option value="">-- Pilih Kategori --</option>
-                  {masterCategories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.nama}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="md:col-span-4">
-                <label className="text-xs text-slate-400 block mb-1">Layanan</label>
-                <select
-                  disabled={!selectedCategoryId}
-                  value={selectedServiceId}
-                  onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50"
-                >
-                  <option value="">-- Pilih Layanan --</option>
-                  {availableServices.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nama} (Rp {s.harga.toLocaleString("id-ID")}/{s.satuan})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="text-xs text-slate-400 block mb-1">
-                  {currentService ? `Jumlah (${currentService.satuan})` : "Jumlah"}
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  value={qty}
-                  onChange={(e) => setQty(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div className="md:col-span-2">
+                  Batal
+                </button>
                 <button
                   type="submit"
-                  disabled={!selectedServiceId}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 text-white font-medium text-sm rounded-xl transition flex items-center justify-center gap-1"
+                  disabled={saving}
+                  className="btn btn-sm btn-primary min-w-[100px]"
                 >
-                  <Plus className="w-4 h-4" /> Tambah
+                  {saving ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : editing ? (
+                    "Update Order"
+                  ) : (
+                    "Simpan Order"
+                  )}
                 </button>
               </div>
             </form>
-
-            {currentService && (
-              <div className="p-3 bg-slate-800/50 rounded-xl text-xs flex justify-between items-center text-slate-300 border border-slate-700/50">
-                <span>Harga Satuan: <b>Rp {currentService.harga.toLocaleString("id-ID")} / {currentService.satuan}</b></span>
-                <span>Subtotal Item: <b className="text-blue-400 text-sm">Rp {currentSubtotal.toLocaleString("id-ID")}</b></span>
-              </div>
-            )}
-          </div>
-
-          {/* TABEL RINCIAN ITEM ORDER */}
-          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
-            <h2 className="text-lg font-semibold">Rincian Item Order</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-300">
-                <thead className="bg-slate-800 text-slate-400 uppercase text-xs">
-                  <tr>
-                    <th className="px-4 py-3 rounded-l-xl">Kategori & Layanan</th>
-                    <th className="px-4 py-3">Harga</th>
-                    <th className="px-4 py-3">Jumlah</th>
-                    <th className="px-4 py-3">Subtotal</th>
-                    <th className="px-4 py-3 rounded-r-xl text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {cart.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="text-center py-6 text-slate-500">
-                        Belum ada item layanan yang ditambahkan.
-                      </td>
-                    </tr>
-                  ) : (
-                    cart.map((item) => (
-                      <tr key={item.id}>
-                        <td className="px-4 py-3">
-                          <span className="font-semibold text-white">[{item.categoryName}]</span> {item.nama}
-                        </td>
-                        <td className="px-4 py-3">Rp {item.harga.toLocaleString("id-ID")}</td>
-                        <td className="px-4 py-3">{item.qty} {item.satuan}</td>
-                        <td className="px-4 py-3 font-semibold text-white">
-                          Rp {item.subtotal.toLocaleString("id-ID")}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="p-1 text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
           </div>
         </div>
-
-        {/* KOLOM KANAN: RINGKASAN & PEMBAYARAN */}
-        <div className="space-y-6">
-          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-6 sticky top-6">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Calculator className="w-5 h-5 text-blue-400" />
-              Ringkasan Pembayaran
-            </h2>
-
-            <div className="space-y-3 border-b border-slate-800 pb-4 text-sm">
-              <div className="flex justify-between text-slate-400">
-                <span>Total Item:</span>
-                <span className="text-white font-medium">{cart.length} Layanan</span>
-              </div>
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-base font-bold text-white">Total Bayar:</span>
-                <span className="text-2xl font-extrabold text-blue-400">
-                  Rp {grandTotal.toLocaleString("id-ID")}
-                </span>
-              </div>
-            </div>
-
-            {/* OPSI METODE PEMBAYARAN */}
-            <div className="space-y-3">
-              <label className="text-xs font-medium text-slate-400 block">Metode Pembayaran</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setMetodePembayaran("cash")}
-                  className={`py-2.5 rounded-xl text-sm font-semibold border transition ${
-                    metodePembayaran === "cash"
-                      ? "bg-blue-600 border-blue-500 text-white"
-                      : "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700"
-                  }`}
-                >
-                  Cash (Tunai)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMetodePembayaran("transfer")}
-                  className={`py-2.5 rounded-xl text-sm font-semibold border transition ${
-                    metodePembayaran === "transfer"
-                      ? "bg-blue-600 border-blue-500 text-white"
-                      : "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700"
-                  }`}
-                >
-                  Transfer
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={handleSubmitOrder}
-              className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 className="w-5 h-5" /> Simpan Transaksi Order
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
+
+export default Order;

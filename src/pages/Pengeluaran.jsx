@@ -12,8 +12,6 @@ const CATEGORY_SUGGESTIONS = [
   "Listrik",
   "Air",
   "Deterjen & Pewangi",
-  "Gaji Karyawan",
-  "Sewa Tempat",
   "Perawatan Mesin",
   "Transportasi",
   "Lainnya",
