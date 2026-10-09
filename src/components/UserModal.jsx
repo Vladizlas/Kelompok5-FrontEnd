@@ -37,36 +37,53 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
     setErrorMsg("");
 
     try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
       if (editData) {
-        await axios.put(`http://localhost:3000/api/users/${editData.id}`, formData);
+        await axios.put(
+          `http://localhost:3000/api/users/${editData.id}`,
+          formData,
+          config
+        );
       } else {
-        await axios.post("http://localhost:3000/api/users", formData);
+        await axios.post("http://localhost:3000/api/users", formData, config);
       }
       onRefresh();
       onClose();
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || "Terjadi kesalahan pada server");
+      setErrorMsg(
+        err.response?.data?.message || "Terjadi kesalahan pada server"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fadeIn">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 w-full max-w-md overflow-hidden my-8 text-slate-800">
+
         {/* Header Modal */}
-        <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+        <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-6 text-white flex justify-between items-start">
           <div>
-            <h2 className="text-lg font-bold text-slate-800">
+            <h2 className="text-xl font-extrabold tracking-tight">
               {editData ? "Edit Data User" : "Tambah User Baru"}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {editData ? "Perbarui informasi akun pengguna" : "Isi formulir untuk menambahkan akun baru"}
+            <p className="text-xs text-sky-100 font-medium mt-1">
+              {editData
+                ? "Perbarui informasi akun pengguna"
+                : "Isi formulir untuk menambahkan akun baru"}
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+            className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg text-xs font-bold transition"
           >
             ✕
           </button>
@@ -75,14 +92,21 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {errorMsg && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl flex items-center gap-2">
-              <span className="font-bold">⚠️</span>
-              <span>{errorMsg}</span>
+            <div className="bg-rose-50 border border-rose-200 text-rose-700 p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between">
+              <span>⚠️ {errorMsg}</span>
+              <button
+                type="button"
+                onClick={() => setErrorMsg("")}
+                className="text-rose-500 hover:text-rose-800 font-bold ml-2"
+              >
+                ✕
+              </button>
             </div>
           )}
 
+          {/* Nama Lengkap */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
               Nama Lengkap
             </label>
             <input
@@ -92,12 +116,13 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
               onChange={handleChange}
               required
               placeholder="Masukkan nama lengkap"
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-xl focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 transition-all placeholder:text-slate-400"
+              className="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
             />
           </div>
 
+          {/* Email */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
               Email
             </label>
             <input
@@ -107,13 +132,19 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
               onChange={handleChange}
               required
               placeholder="contoh@fanaralaundry.com"
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-xl focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 transition-all placeholder:text-slate-400"
+              className="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
             />
           </div>
 
+          {/* Password */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-              Password {editData && <span className="text-[10px] text-slate-400 lowercase font-normal">(opsional)</span>}
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Password{" "}
+              {editData && (
+                <span className="text-[10px] text-slate-400 font-normal">
+                  (biarkan kosong jika tidak diubah)
+                </span>
+              )}
             </label>
             <input
               type="password"
@@ -121,48 +152,48 @@ const UserModal = ({ isOpen, onClose, onRefresh, editData }) => {
               value={formData.password}
               onChange={handleChange}
               required={!editData}
-              placeholder={editData ? "•••••••• (Biarkan kosong jika tidak diubah)" : "••••••••"}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-xl focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 transition-all placeholder:text-slate-400"
+              placeholder={editData ? "•••••••• (opsional)" : "••••••••"}
+              className="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
             />
           </div>
 
+          {/* Role / Hak Akses */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
               Role / Hak Akses
             </label>
             <select
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-slate-800 text-sm rounded-xl focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 transition-all cursor-pointer"
+              className="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition cursor-pointer"
             >
               <option value="kasir">Kasir</option>
               <option value="admin">Admin</option>
+              <option value="owner">Owner</option>
             </select>
           </div>
 
           {/* Footer Action Buttons */}
-          <div className="flex justify-end items-center gap-3 pt-4 border-t border-slate-100 mt-6">
+          <div className="flex justify-end items-center gap-2 pt-4 border-t border-slate-100 mt-6">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all"
+              disabled={loading}
+              className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition disabled:opacity-50"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-xl shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/40 transition-all disabled:opacity-50 disabled:shadow-none"
+              className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md shadow-sky-500/20 transition disabled:opacity-50 flex items-center gap-2"
             >
               {loading ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                  </svg>
-                  Menyimpan...
-                </span>
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Menyimpan...</span>
+                </>
               ) : (
                 "Simpan"
               )}

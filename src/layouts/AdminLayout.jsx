@@ -20,10 +20,10 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex bg-base-200 min-h-screen">
+    <div className="flex bg-white min-h-screen">
       <Sidebar user={user} />
 
-      <main className="flex-1 p-6">
+      <main className="flex-1 bg-white p-6 overflow-y-auto">
         <Outlet context={{ user }} />
       </main>
     </div>

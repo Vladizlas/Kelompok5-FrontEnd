@@ -12,8 +12,6 @@ const CATEGORY_SUGGESTIONS = [
   "Listrik",
   "Air",
   "Deterjen & Pewangi",
-  "Gaji Karyawan",
-  "Sewa Tempat",
   "Perawatan Mesin",
   "Transportasi",
   "Lainnya",
@@ -249,16 +247,16 @@ function Pengeluaran() {
   );
 
   // =========================================================
-  // RENDER
+  // RENDER (TAMPILAN LATAR BELAKANG PUTIH & BANNER SKY BLUE)
   // =========================================================
 
   return (
-    <div className="p-6">
+    <div className="w-full min-h-screen bg-white p-6 lg:p-8 space-y-6 text-slate-800">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-500/15 text-white">
         <div>
-          <h1 className="text-2xl font-bold">Pengeluaran</h1>
-          <p className="text-sm opacity-70 mt-1">
+          <h1 className="text-2xl font-black tracking-tight">Pengeluaran</h1>
+          <p className="text-xs font-medium text-sky-100 mt-1">
             Catat pengeluaran operasional Fanara Laundry
           </p>
         </div>
@@ -266,174 +264,209 @@ function Pengeluaran() {
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="btn btn-primary w-fit"
+          className="bg-white text-sky-600 hover:bg-sky-50 font-bold px-4 py-2.5 rounded-xl shadow-sm transition duration-200 text-xs flex items-center justify-center gap-2"
         >
-          + Tambah Pengeluaran
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+          Tambah Pengeluaran
         </button>
       </div>
 
       {/* ERROR */}
       {error && (
-        <div role="alert" className="alert alert-error mb-4">
-          <span>{error}</span>
-
+        <div role="alert" className="alert alert-error shadow-sm rounded-xl">
+          <svg className="w-6 h-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="flex-1 text-sm font-medium">{error}</span>
           <button type="button" onClick={handleRetry} className="btn btn-sm">
             Coba lagi
           </button>
         </div>
       )}
 
-      {/* FILTER + TOTAL */}
-      <div className="flex flex-col md:flex-row md:items-end gap-4 mb-4">
-        <div>
-          <label className="block text-xs font-medium mb-1">Bulan</label>
+      {/* CONTAINER TABLE & FILTER */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden p-6 space-y-4">
+        {/* FILTER + TOTAL */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-slate-100 pb-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* BULAN */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                Bulan
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="month"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                  className="bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
+                />
 
-          <div className="flex gap-2">
-            <input
-              type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              className="input"
-            />
+                {month && (
+                  <button
+                    type="button"
+                    onClick={() => setMonth("")}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition"
+                  >
+                    Semua
+                  </button>
+                )}
+              </div>
+            </div>
 
-            {month && (
-              <button
-                type="button"
-                onClick={() => setMonth("")}
-                className="btn"
-              >
-                Semua
-              </button>
-            )}
+            {/* CARI */}
+            <div className="flex-1 sm:w-72">
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                Cari
+              </label>
+              <div className="relative">
+                <svg
+                  className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Kategori atau keterangan..."
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* TOTAL */}
+          <div className="bg-sky-50/50 border border-sky-100 px-4 py-2.5 rounded-xl self-start lg:self-auto text-left lg:text-right">
+            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Total {month ? "Bulan Ini" : "Keseluruhan"}
+            </span>
+            <span className="text-xl font-black text-slate-800 font-mono">
+              {rupiah(totalAmount)}
+            </span>
           </div>
         </div>
 
-        <div className="flex-1 max-w-sm">
-          <label className="block text-xs font-medium mb-1">Cari</label>
-
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Kategori atau keterangan..."
-            className="input w-full"
-          />
-        </div>
-
-        <div className="md:ml-auto rounded-box bg-base-200 px-4 py-2">
-          <div className="text-xs opacity-70">
-            Total {month ? "bulan ini" : "keseluruhan"}
-          </div>
-
-          <div className="text-lg font-bold">{rupiah(totalAmount)}</div>
-        </div>
-      </div>
-
-      {/* TABLE */}
-      <div className="bg-base-100 border border-base-300 rounded-box overflow-x-auto">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tanggal</th>
-              <th>Kategori</th>
-              <th>Keterangan</th>
-              <th className="text-right">Jumlah</th>
-              <th className="text-center">Aksi</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="text-center py-10">
-                  <span className="loading loading-spinner"></span>
-                </td>
+        {/* TABLE */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-sky-50/50 border-b border-sky-100 text-sky-900 text-[11px] font-bold tracking-wider uppercase">
+                <th className="py-3.5 px-4 w-16">ID</th>
+                <th className="py-3.5 px-4 w-32">Tanggal</th>
+                <th className="py-3.5 px-4">Kategori</th>
+                <th className="py-3.5 px-4">Keterangan</th>
+                <th className="py-3.5 px-4 text-right">Jumlah</th>
+                <th className="py-3.5 px-4 w-32 text-center">Aksi</th>
               </tr>
-            ) : filteredExpenses.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="text-center py-10 opacity-70">
-                  {expenses.length === 0
-                    ? "Belum ada data pengeluaran."
-                    : "Tidak ada pengeluaran yang cocok dengan filter."}
-                </td>
-              </tr>
-            ) : (
-              filteredExpenses.map((expense) => (
-                <tr key={expense.id}>
-                  <td>{expense.id}</td>
-                  <td className="whitespace-nowrap">
-                    {formatDate(expense.date)}
-                  </td>
-                  <td>
-                    <span className="badge badge-outline">
-                      {expense.category}
-                    </span>
-                  </td>
-                  <td>{expense.description || "-"}</td>
-                  <td className="text-right font-semibold whitespace-nowrap">
-                    {rupiah(expense.amount)}
-                  </td>
-                  <td>
-                    <div className="flex justify-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEdit(expense)}
-                        className="btn btn-xs btn-warning btn-outline"
-                      >
-                        Edit
-                      </button>
+            </thead>
 
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(expense)}
-                        className="btn btn-xs btn-error btn-outline"
-                      >
-                        Hapus
-                      </button>
-                    </div>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-12 text-sky-600">
+                    <span className="loading loading-spinner loading-md text-sky-500"></span>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : filteredExpenses.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-12 text-slate-400 font-medium text-xs">
+                    {expenses.length === 0
+                      ? "Belum ada data pengeluaran."
+                      : "Tidak ada pengeluaran yang cocok dengan filter."}
+                  </td>
+                </tr>
+              ) : (
+                filteredExpenses.map((expense) => (
+                  <tr key={expense.id} className="hover:bg-sky-50/20 transition duration-150">
+                    <td className="py-4 px-4 font-mono text-xs font-bold text-sky-600">#{expense.id}</td>
+                    <td className="py-4 px-4 text-xs font-medium text-slate-600 whitespace-nowrap">
+                      {formatDate(expense.date)}
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className="inline-block bg-slate-100 border border-slate-200/80 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">
+                        {expense.category}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-xs font-medium text-slate-800">
+                      {expense.description || "-"}
+                    </td>
+                    <td className="py-4 px-4 text-right font-bold text-slate-800 font-mono text-xs whitespace-nowrap">
+                      {rupiah(expense.amount)}
+                    </td>
+                    <td className="py-4 px-4 text-center whitespace-nowrap">
+                      <div className="flex justify-center items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(expense)}
+                          className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(expense)}
+                          className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* MODAL */}
       {showModal && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h2 className="text-lg font-bold mb-4">
-              {editing ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
-            </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md overflow-hidden my-8">
+            <div className="bg-sky-500 text-white px-6 py-4 flex items-center justify-between">
+              <h2 className="text-base font-bold">
+                {editing ? "Edit Pengeluaran" : "Tambah Pengeluaran"}
+              </h2>
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="text-white/80 hover:text-white font-bold text-xl leading-none"
+              >
+                &times;
+              </button>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {formError && (
-                <div role="alert" className="alert alert-error text-sm">
-                  <span>{formError}</span>
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2.5 rounded-xl text-xs font-medium">
+                  {formError}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Tanggal
                 </label>
-
                 <input
                   type="date"
                   name="date"
                   value={form.date}
                   onChange={handleChange}
-                  className="input w-full"
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Kategori
                 </label>
-
                 <input
                   type="text"
                   name="category"
@@ -442,7 +475,7 @@ function Pengeluaran() {
                   list="expense-categories"
                   maxLength={50}
                   placeholder="Pilih atau ketik kategori"
-                  className="input w-full"
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                 />
 
                 <datalist id="expense-categories">
@@ -453,10 +486,9 @@ function Pengeluaran() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Keterangan
                 </label>
-
                 <textarea
                   name="description"
                   value={form.description}
@@ -464,15 +496,14 @@ function Pengeluaran() {
                   maxLength={255}
                   rows={3}
                   placeholder="Contoh: Beli deterjen 5 liter"
-                  className="textarea w-full"
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Jumlah (Rp)
                 </label>
-
                 <input
                   type="number"
                   name="amount"
@@ -481,15 +512,15 @@ function Pengeluaran() {
                   min="1"
                   step="1"
                   placeholder="Contoh: 150000"
-                  className="input w-full"
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                 />
               </div>
 
-              <div className="modal-action">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="btn"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
                 >
                   Batal
                 </button>
@@ -497,9 +528,15 @@ function Pengeluaran() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="btn btn-primary"
+                  className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm disabled:opacity-50"
                 >
-                  {saving ? "Menyimpan..." : editing ? "Update" : "Simpan"}
+                  {saving ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : editing ? (
+                    "Update"
+                  ) : (
+                    "Simpan"
+                  )}
                 </button>
               </div>
             </form>

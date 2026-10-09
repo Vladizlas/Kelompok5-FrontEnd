@@ -1,2 +1,10 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* Mengubah ikon bawaan input tanggal menjadi warna biru/sky-500 */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(45%) sepia(90%) saturate(1000%) hue-rotate(170deg);
+}
