@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -54,19 +54,24 @@ export default function Login() {
 
         {/* Logo & Header Judul */}
         <div className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 mb-3">
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 mb-3 border border-white/20">
+            {/* IKON MESIN CUCI (WASHING MACHINE) */}
             <svg
-              className="w-7 h-7"
+              className="w-7 h-7 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-              />
+              {/* Bodi Utama Mesin Cuci */}
+              <rect x="4" y="3" width="16" height="18" rx="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              {/* Tabung Tengah (Pintu Kaca) */}
+              <circle cx="12" cy="13" r="4" strokeWidth="2" />
+              {/* Gelombang Air / Baju Didalam Tabung */}
+              <path d="M10 13c1-1 3-1 4 0" strokeWidth="1.8" strokeLinecap="round" />
+              {/* Tombol Kontrol Atas */}
+              <circle cx="8" cy="6.5" r="1" fill="currentColor" />
+              <circle cx="11" cy="6.5" r="1" fill="currentColor" />
+              <line x1="14" y1="6.5" x2="16" y2="6.5" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">

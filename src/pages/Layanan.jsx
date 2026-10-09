@@ -386,7 +386,7 @@ function Layanan() {
   // =========================================================
   if (loading) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center bg-white">
+      <div className="min-h-100 flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="w-10 h-10 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-500 text-xs font-medium">Memuat data layanan...</p>
@@ -412,7 +412,7 @@ function Layanan() {
   return (
     <div className="w-full min-h-screen bg-white p-6 lg:p-8 space-y-6 text-slate-800">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-linear-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white">
         <div>
           <h1 className="text-2xl font-black tracking-tight">Daftar Layanan</h1>
           <p className="text-sky-100 text-xs font-medium mt-1">

@@ -27,27 +27,32 @@ export default function Sidebar() {
     <aside className="w-64 h-screen sticky top-0 bg-gradient-to-r from-sky-500 to-blue-600 border-r border-sky-100 flex flex-col justify-between shrink-0">
       <div>
         {/* Logo & Brand Header */}
-        <div className="p-6 border-b border-sky-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-md shadow-sky-200">
+        <div className="p-6 border-b border-sky-400/30 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-md border border-white/20 shrink-0">
+            {/* IKON MESIN CUCI (WASHING MACHINE) */}
             <svg
-              className="w-6 h-6 text-slate-200"
+              className="w-6 h-6 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-              />
+              {/* Bodi Utama Mesin Cuci */}
+              <rect x="4" y="3" width="16" height="18" rx="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              {/* Tabung Tengah (Pintu Kaca) */}
+              <circle cx="12" cy="13" r="4" strokeWidth="2" />
+              {/* Gelombang Air / Baju Didalam Tabung */}
+              <path d="M10 13c1-1 3-1 4 0" strokeWidth="1.8" strokeLinecap="round" />
+              {/* Tombol Kontrol Atas */}
+              <circle cx="8" cy="6.5" r="1" fill="currentColor" />
+              <circle cx="11" cy="6.5" r="1" fill="currentColor" />
+              <line x1="14" y1="6.5" x2="16" y2="6.5" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
           <div>
-            <h1 className="font-bold text-base text-slate-800 leading-tight">
-              Fanara <span className="text-sky-500">Laundry</span>
+            <h1 className="font-extrabold text-base text-white leading-tight">
+              Fanara <span className="text-sky-200">Laundry</span>
             </h1>
-            <span className="text-[10px] font-semibold tracking-wider text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full uppercase">
+            <span className="text-[10px] font-semibold tracking-wider text-sky-700 bg-white/90 px-2 py-0.5 rounded-full uppercase shadow-sm">
               Admin Panel
             </span>
           </div>
@@ -55,7 +60,7 @@ export default function Sidebar() {
 
         {/* Menu Navigasi */}
         <nav className="p-4 space-y-1">
-          <div className="px-3 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <div className="px-3 pb-2 text-[11px] font-bold text-sky-100/70 uppercase tracking-wider">
             Menu Utama
           </div>
           {menu.map((m) => (
@@ -64,15 +69,15 @@ export default function Sidebar() {
               to={m.path}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive
-                  ? "bg-sky-500 text-white shadow-md shadow-sky-200"
-                  : "text-white hover:bg-sky-50 hover:text-sky-600"
+                  ? "bg-white text-sky-600 shadow-md shadow-sky-900/10"
+                  : "text-white/90 hover:bg-white/10 hover:text-white"
                 }`
               }
             >
               {({ isActive }) => (
                 <>
                   <svg
-                    className={`w-5 h-5 transition-colors ${isActive ? "text-white" : "text-slate-200"
+                    className={`w-5 h-5 transition-colors ${isActive ? "text-sky-600" : "text-sky-100"
                       }`}
                     fill="none"
                     stroke="currentColor"
@@ -94,10 +99,10 @@ export default function Sidebar() {
       </div>
 
       {/* Tombol Logout */}
-      <div className="p-4 border-t border-sky-100 bg-slate-50/50">
+      <div className="p-4 border-t border-sky-400/30 bg-blue-700/20 backdrop-blur-sm">
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all duration-200"
+          className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-rose-600 bg-white hover:bg-rose-50 border border-rose-100 rounded-xl transition-all duration-200 shadow-sm"
         >
           <svg
             className="w-4 h-4 text-rose-500"
