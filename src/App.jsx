@@ -10,7 +10,6 @@ import Order from "./pages/Order";
 import Customer from "./pages/Customer";
 import Pengeluaran from "./pages/Pengeluaran";
 import Home from "./pages/Home";
-import Report from "./pages/Laporan";
 import PesanOnline from "./pages/PesanOnline";
 
 function App() {
@@ -18,10 +17,18 @@ function App() {
     <BrowserRouter>
       <Routes>
 
+        {/* HOME */}
+        <Route path="/" element={<Home />} />
+
         {/* LOGIN */}
         <Route
           path="/login"
           element={<Login />}
+        />
+        
+        <Route
+          path="/"
+          element={<Home />}
         />
 
         <Route
@@ -44,7 +51,9 @@ function App() {
 
           <Route
             path="/pesan-online"
-            element={<PesanOnline />}
+            element={
+             <PesanOnline/>
+            }
           />
 
           <Route

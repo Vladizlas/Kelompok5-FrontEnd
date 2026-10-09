@@ -121,7 +121,8 @@ export default function PesanOnline() {
       const cocokCari =
         !kata ||
         String(p.nama || "").toLowerCase().includes(kata) ||
-        String(p.kode || p.id).toLowerCase().includes(kata);
+        String(p.kode || p.id).toLowerCase().includes(kata) ||
+        String(p.alamatAntar || "").toLowerCase().includes(kata);
 
       return cocokStatus && cocokCari;
     });
@@ -227,13 +228,23 @@ export default function PesanOnline() {
                 <tr key={p.id}>
                   <td className="font-semibold">{p.kode || `PO-${p.id}`}</td>
 
-                  <td>
+                                    <td>
                     <p className="font-medium">{p.nama}</p>
                     <p className="text-xs opacity-70">
                       {p.pengambilan === "jemput"
                         ? `Jemput: ${p.alamat || "-"}`
                         : "Antar sendiri ke outlet"}
                     </p>
+                    <p className="text-xs opacity-70">
+                      {p.pengembalian === "antar"
+                        ? `Antar kembali ke: ${p.alamatAntar || "-"}`
+                        : "Diambil di outlet"}
+                    </p>
+                    {p.pengembalian === "antar" && (
+                      <span className="badge badge-outline badge-sm mt-1">
+                        Perlu diantar
+                      </span>
+                    )}
                     {p.catatan && (
                       <p className="text-xs opacity-70">Catatan: {p.catatan}</p>
                     )}
