@@ -25,9 +25,9 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_CLASS = {
-  diterima: "bg-sky-100 text-sky-800 border-sky-300",
-  diproses: "bg-amber-100 text-amber-800 border-amber-300",
-  selesai: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  diterima: "bg-sky-50 text-sky-700 border-sky-200",
+  diproses: "bg-amber-50 text-amber-700 border-amber-200",
+  selesai: "bg-emerald-50 text-emerald-700 border-emerald-200",
   diambil: "bg-slate-100 text-slate-700 border-slate-300",
 };
 
@@ -76,6 +76,8 @@ function Order() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
 
   // =========================================================
   // FETCH DATA
@@ -369,17 +371,17 @@ function Order() {
     }
   };
 
-  // =========================================================
-  // RENDER (BLUE SKY & WHITE THEME)
-  // =========================================================
+  const handlePrintInvoice = () => {
+    window.print();
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-6 max-w-7xl mx-auto space-y-6 text-slate-800">
+    <div className="w-full min-h-screen bg-white p-6 lg:p-8 space-y-6 text-slate-800">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-md text-white">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-500/15 text-white print:hidden">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Kelola Order</h1>
-          <p className="text-sky-100 text-sm mt-1">
+          <h1 className="text-2xl font-black tracking-tight">Kelola Order</h1>
+          <p className="text-sky-100 text-xs font-medium mt-1">
             Satu transaksi invoice dapat berisi beberapa layanan dan jenis item
           </p>
         </div>
@@ -388,20 +390,20 @@ function Order() {
           type="button"
           onClick={handleOpenCreate}
           disabled={loading || customers.length === 0 || services.length === 0}
-          className="bg-white text-sky-600 hover:bg-sky-50 font-semibold px-4 py-2.5 rounded-xl shadow-sm transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
+          className="bg-white text-sky-600 hover:bg-sky-50 font-bold px-4 py-2.5 rounded-xl shadow-sm transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center gap-1.5"
         >
-          <span className="text-lg leading-none">+</span> Tambah Order
+          <span className="text-base leading-none">+</span> Tambah Order
         </button>
       </div>
 
       {/* ERROR MESSAGE */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm">
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm print:hidden">
           <span className="text-sm font-medium">{error}</span>
           <button
             type="button"
             onClick={handleRetry}
-            className="text-xs bg-red-100 hover:bg-red-200 text-red-800 font-semibold px-3 py-1.5 rounded-lg transition"
+            className="text-xs bg-rose-100 hover:bg-rose-200 text-rose-800 font-semibold px-3 py-1.5 rounded-lg transition"
           >
             Coba lagi
           </button>
@@ -410,7 +412,7 @@ function Order() {
 
       {/* WARNING MASTER DATA */}
       {!loading && !error && customers.length === 0 && (
-        <div className="bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl shadow-sm text-sm">
+        <div className="bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl text-xs print:hidden">
           Belum ada pelanggan. Tambahkan terlebih dahulu di menu{" "}
           <Link to="/customer" className="font-semibold underline text-sky-600 hover:text-sky-800">
             Customer
@@ -420,7 +422,7 @@ function Order() {
       )}
 
       {!loading && !error && services.length === 0 && (
-        <div className="bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl shadow-sm text-sm">
+        <div className="bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 rounded-xl text-xs print:hidden">
           Belum ada layanan. Tambahkan terlebih dahulu di menu{" "}
           <Link to="/layanan" className="font-semibold underline text-sky-600 hover:text-sky-800">
             Layanan
@@ -430,19 +432,19 @@ function Order() {
       )}
 
       {/* TABLE DATA */}
-      <div className="bg-white border border-sky-100 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden print:hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-sky-50/70 border-b border-sky-100 text-sky-900 text-xs font-bold tracking-wider uppercase">
+              <tr className="bg-sky-50/50 border-b border-sky-100 text-sky-900 text-[11px] font-bold tracking-wider uppercase">
                 <th className="py-3.5 px-4 w-28">Invoice</th>
                 <th className="py-3.5 px-4 w-32">Tanggal</th>
-                <th className="py-3.5 px-4 w-40">Pelanggan</th>
+                <th className="py-3.5 px-4 w-36">Pelanggan</th>
                 <th className="py-3.5 px-4 min-w-[240px]">Rincian Layanan</th>
                 <th className="py-3.5 px-4 w-32">Total</th>
                 <th className="py-3.5 px-4 w-28">Pembayaran</th>
                 <th className="py-3.5 px-4 w-32">Status</th>
-                <th className="py-3.5 px-4 w-28 text-center">Aksi</th>
+                <th className="py-3.5 px-4 w-36 text-center">Aksi</th>
               </tr>
             </thead>
 
@@ -455,47 +457,43 @@ function Order() {
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-12 text-slate-400 font-medium">
+                  <td colSpan="8" className="text-center py-12 text-slate-400 font-medium text-xs">
                     Belum ada order.
                   </td>
                 </tr>
               ) : (
                 orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-sky-50/40 transition duration-150">
-                    {/* INVOICE */}
+                  <tr key={order.id} className="hover:bg-sky-50/20 transition duration-150">
                     <td className="py-4 px-4 font-mono text-xs font-bold text-sky-600 whitespace-nowrap">
                       {invoiceNo(order.id)}
                     </td>
 
-                    {/* TANGGAL */}
-                    <td className="py-4 px-4 text-xs text-slate-500 whitespace-nowrap">
+                    <td className="py-4 px-4 text-xs text-slate-500 whitespace-nowrap font-medium">
                       {formatDate(order.createdAt || order.orderDate || order.created_at)}
                     </td>
 
-                    {/* PELANGGAN */}
-                    <td className="py-4 px-4 font-semibold text-slate-800">
+                    <td className="py-4 px-4 font-bold text-slate-800">
                       {order.customer?.name || "-"}
                     </td>
 
-                    {/* RINCIAN */}
                     <td className="py-4 px-4">
                       <div className="space-y-2 text-xs">
                         {(order.items || []).map((item) => (
                           <div
                             key={item.id}
-                            className="bg-slate-50 border border-slate-100 p-2.5 rounded-lg space-y-1"
+                            className="bg-slate-50/80 border border-slate-200/60 p-2.5 rounded-xl space-y-1"
                           >
-                            <div className="font-semibold text-sky-900 text-sm">
+                            <div className="font-bold text-sky-900 text-xs">
                               {item.service?.name || "-"}
                             </div>
-                            <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
-                              <span className="bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded font-medium">
+                            <div className="text-slate-500 text-[10px] flex items-center gap-1.5 font-medium">
+                              <span className="bg-sky-100/70 text-sky-700 px-1.5 py-0.5 rounded font-bold">
                                 {item.category?.name || "-"}
                               </span>
                               <span>&bull;</span>
                               <span>{item.servicePrice?.itemType || "-"}</span>
                             </div>
-                            <div className="font-mono text-slate-700 pt-0.5 border-t border-slate-200/60">
+                            <div className="font-mono text-slate-700 pt-1 border-t border-slate-200/50 text-[11px]">
                               {Number(item.quantity)} {item.unit} &times; {rupiah(item.pricePerUnit)} ={" "}
                               <span className="font-bold text-sky-700">
                                 {rupiah(item.subtotal)}
@@ -506,32 +504,31 @@ function Order() {
                       </div>
                     </td>
 
-                    {/* TOTAL */}
-                    <td className="py-4 px-4 font-bold text-sky-900 whitespace-nowrap">
+                    <td className="py-4 px-4 font-bold text-slate-800 font-mono text-xs whitespace-nowrap">
                       {rupiah(order.totalPrice)}
                     </td>
 
-                    {/* PEMBAYARAN */}
                     <td className="py-4 px-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${order.paymentMethod === "cash"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-sky-50 text-sky-700 border border-sky-200"
-                          }`}
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${
+                          order.paymentMethod === "cash"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-sky-50 text-sky-700 border-sky-200"
+                        }`}
                       >
                         {order.paymentMethod}
                       </span>
                     </td>
 
-                    {/* STATUS */}
                     <td className="py-4 px-4 whitespace-nowrap">
                       <select
                         value={order.status}
                         onChange={(e) =>
                           handleStatusChange(order, e.target.value)
                         }
-                        className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-400 transition cursor-pointer ${STATUS_CLASS[order.status] || "bg-slate-50 border-slate-300"
-                          }`}
+                        className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-400 transition cursor-pointer capitalize ${
+                          STATUS_CLASS[order.status] || "bg-slate-50 border-slate-300"
+                        }`}
                       >
                         {STATUS_OPTIONS.map((s) => (
                           <option key={s.value} value={s.value}>
@@ -541,13 +538,21 @@ function Order() {
                       </select>
                     </td>
 
-                    {/* AKSI */}
                     <td className="py-4 px-4 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setInvoiceOrder(order)}
+                          className="bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
+                          title="Cetak Invoice"
+                        >
+                          Invoice
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(order)}
-                          className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition"
+                          className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
                         >
                           Edit
                         </button>
@@ -555,7 +560,7 @@ function Order() {
                         <button
                           type="button"
                           onClick={() => handleDelete(order)}
-                          className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition"
+                          className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
                         >
                           Hapus
                         </button>
@@ -572,10 +577,9 @@ function Order() {
       {/* MODAL EDIT / TAMBAH */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-sky-100 shadow-xl w-full max-w-3xl overflow-hidden my-8">
-            {/* MODAL HEADER */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-3xl overflow-hidden my-8">
             <div className="bg-sky-500 text-white px-6 py-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold">
+              <h2 className="text-base font-bold">
                 {editing
                   ? `Edit Order ${invoiceNo(editing.id)}`
                   : "Tambah Order Baru"}
@@ -589,15 +593,13 @@ function Order() {
               </button>
             </div>
 
-            {/* MODAL BODY */}
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {formError && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2.5 rounded-xl text-sm font-medium">
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2.5 rounded-xl text-xs font-medium">
                   {formError}
                 </div>
               )}
 
-              {/* PILIH PELANGGAN */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Nama Pelanggan
@@ -606,7 +608,7 @@ function Order() {
                   name="customerId"
                   value={form.customerId}
                   onChange={handleFieldChange}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                 >
                   <option value="">-- Pilih Pelanggan --</option>
                   {customers.map((c) => (
@@ -617,16 +619,15 @@ function Order() {
                 </select>
               </div>
 
-              {/* LIST ITEM LAYANAN */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Rincian Layanan
                   </h3>
                   <button
                     type="button"
                     onClick={handleAddItem}
-                    className="bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                    className="bg-sky-50 hover:bg-sky-100 text-sky-600 border border-sky-200 text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
                   >
                     <span>+</span> Tambah Item
                   </button>
@@ -638,7 +639,7 @@ function Order() {
                   return (
                     <div
                       key={item.key}
-                      className="bg-sky-50/40 border border-sky-100 rounded-xl p-4 space-y-3 relative"
+                      className="bg-sky-50/30 border border-sky-100 rounded-xl p-4 space-y-3 relative"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-sky-800">
@@ -649,14 +650,13 @@ function Order() {
                           type="button"
                           onClick={() => handleRemoveItem(item.key)}
                           disabled={form.items.length === 1}
-                          className="text-xs text-rose-600 hover:text-rose-800 font-semibold disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="text-xs text-rose-600 hover:text-rose-800 font-bold disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                           Hapus Item
                         </button>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {/* KATEGORI */}
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                             Kategori
@@ -677,7 +677,6 @@ function Order() {
                           </select>
                         </div>
 
-                        {/* LAYANAN */}
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                             Layanan
@@ -705,7 +704,6 @@ function Order() {
                           </select>
                         </div>
 
-                        {/* JENIS ITEM / HARGA */}
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                             Jenis Item & Harga
@@ -733,7 +731,6 @@ function Order() {
                           </select>
                         </div>
 
-                        {/* KUANTITAS */}
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                             {info.unit === "pcs"
@@ -763,7 +760,6 @@ function Order() {
                         </div>
                       </div>
 
-                      {/* SUBTOTAL */}
                       <div className="flex justify-between items-center text-xs pt-2 border-t border-sky-100">
                         <span className="text-slate-500 font-medium">Subtotal Item</span>
                         <span className="font-bold text-sky-700">
@@ -775,15 +771,13 @@ function Order() {
                 })}
               </div>
 
-              {/* TOTAL HARGA */}
               <div className="flex justify-between items-center rounded-xl bg-sky-50 border border-sky-100 px-4 py-3">
-                <span className="font-bold text-sky-900 text-sm">Grand Total</span>
-                <span className="text-xl font-extrabold text-sky-600">
+                <span className="font-bold text-sky-900 text-xs uppercase tracking-wider">Grand Total</span>
+                <span className="text-xl font-black text-sky-600 font-mono">
                   {rupiah(grandTotal)}
                 </span>
               </div>
 
-              {/* METODE PEMBAYARAN */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Metode Pembayaran
@@ -792,31 +786,141 @@ function Order() {
                   name="paymentMethod"
                   value={form.paymentMethod}
                   onChange={handleFieldChange}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                 >
                   <option value="cash">Cash (Tunai)</option>
                   <option value="transfer">Transfer Bank</option>
                 </select>
               </div>
 
-              {/* MODAL ACTIONS */}
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold rounded-xl transition shadow-sm disabled:opacity-50"
+                  className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm disabled:opacity-50"
                 >
                   {saving ? "Menyimpan..." : editing ? "Update Order" : "Simpan Order"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL INVOICE PRINTABLE */}
+      {invoiceOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden my-6 print:m-0 print:shadow-none print:w-full print:max-w-none print:border-none">
+            {/* INVOICE HEADER BAR */}
+            <div className="bg-sky-500 text-white p-4 flex items-center justify-between print:hidden">
+              <span className="font-bold text-xs uppercase tracking-wider">Preview Invoice</span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrintInvoice}
+                  className="bg-white text-sky-600 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                >
+                  🖨️ Cetak / PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInvoiceOrder(null)}
+                  className="text-white/80 hover:text-white font-bold text-xl leading-none px-2"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            {/* INVOICE CONTENT */}
+            <div className="p-8 space-y-6">
+              <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-xl font-black text-sky-600 tracking-tight">LAUNDRY SERVICE</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Nota Transaksi Pelanggan</p>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-lg font-black text-sky-700">
+                    {invoiceNo(invoiceOrder.id)}
+                  </span>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {formatDate(invoiceOrder.createdAt || invoiceOrder.orderDate || invoiceOrder.created_at)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 bg-sky-50/40 p-4 rounded-xl border border-sky-100 text-xs">
+                <div>
+                  <span className="text-slate-400 font-medium block mb-1">Pelanggan:</span>
+                  <p className="font-bold text-slate-800 text-sm">
+                    {invoiceOrder.customer?.name || "-"}
+                  </p>
+                  <p className="text-slate-500 mt-0.5">{invoiceOrder.customer?.phone || ""}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-medium block mb-1">Pembayaran:</span>
+                  <p className="font-bold text-slate-800 uppercase text-sm">
+                    {invoiceOrder.paymentMethod}
+                  </p>
+                  <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-sky-100 text-sky-800">
+                    Status: {invoiceOrder.status}
+                  </span>
+                </div>
+              </div>
+
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider font-bold text-[10px]">
+                    <th className="pb-2">Layanan</th>
+                    <th className="pb-2 text-center">Qty / Berat</th>
+                    <th className="pb-2 text-right">Harga Satuan</th>
+                    <th className="pb-2 text-right">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(invoiceOrder.items || []).map((item, idx) => (
+                    <tr key={item.id || idx}>
+                      <td className="py-3">
+                        <div className="font-bold text-slate-800">
+                          {item.service?.name || "-"}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {item.category?.name || "-"} &bull; {item.servicePrice?.itemType || "-"}
+                        </div>
+                      </td>
+                      <td className="py-3 text-center font-semibold text-slate-700">
+                        {Number(item.quantity)} {item.unit}
+                      </td>
+                      <td className="py-3 text-right text-slate-600 font-mono">
+                        {rupiah(item.pricePerUnit)}
+                      </td>
+                      <td className="py-3 text-right font-bold text-sky-700 font-mono">
+                        {rupiah(item.subtotal)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div className="border-t border-slate-100 pt-4 flex justify-between items-center">
+                <span className="font-bold text-slate-700 text-xs uppercase tracking-wider">Total Tagihan</span>
+                <span className="text-xl font-black text-sky-600 font-mono">
+                  {rupiah(invoiceOrder.totalPrice)}
+                </span>
+              </div>
+
+              <div className="text-center text-[11px] text-slate-400 border-t border-slate-100 pt-4 space-y-1">
+                <p>Terima kasih telah mempercayakan pakaian Anda kepada kami!</p>
+                <p>Simpan nota ini sebagai bukti pengambilan barang.</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

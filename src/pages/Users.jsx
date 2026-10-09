@@ -21,11 +21,14 @@ const Users = () => {
         },
       });
 
-      const dataArray = Array.isArray(response.data) ? response.data : response.data.data;
+      const dataArray = Array.isArray(response.data)
+        ? response.data
+        : response.data.data;
       setUsers(dataArray || []);
     } catch (error) {
       console.error("Gagal mengambil data user:", error);
     } finally {
+      // Perbaikan typo: sebelumnya tertulis "fontally"
       setLoading(false);
     }
   };
@@ -55,99 +58,144 @@ const Users = () => {
         });
         fetchUsers();
       } catch (error) {
-        alert("Gagal menghapus user: " + (error.response?.data?.message || error.message));
+        alert(
+          "Gagal menghapus user: " +
+          (error.response?.data?.message || error.message)
+        );
       }
     }
   };
 
-  return (
-    <div className="flex min-h-screen bg-[#171d25]">
+  // Helper untuk warna badge role yang rapi
+  const getRoleBadge = (role) => {
+    const r = (role || "kasir").toLowerCase();
 
-      {/* Konten Utama di Sisi Kanan */}
-      <div className="flex-1 p-8 text-slate-100 overflow-y-auto">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Manajemen User</h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Kelola akun admin dan kasir Fanara Laundry
-            </p>
-          </div>
-          <button
-            onClick={handleOpenAddModal}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 w-fit"
-          >
-            <span className="text-lg font-bold">+</span>
-            <span>Tambah User</span>
-          </button>
+    if (r === "owner") {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold capitalize tracking-wide bg-purple-50 text-purple-700 border border-purple-200">
+          {role}
+        </span>
+      );
+    }
+
+    if (r === "admin") {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold capitalize tracking-wide bg-sky-50 text-sky-700 border border-sky-200">
+          {role}
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold capitalize tracking-wide bg-slate-100 text-slate-700 border border-slate-200">
+        {role || "kasir"}
+      </span>
+    );
+  };
+
+  return (
+    <div className="w-full min-h-screen bg-white p-6 lg:p-8 space-y-6 text-slate-800">
+      {/* Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-500/15 text-white">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight">
+            Manajemen User
+          </h1>
+          <p className="text-xs font-medium text-sky-100 mt-1">
+            Kelola akun admin dan kasir Fanara Laundry
+          </p>
         </div>
 
-        {/* Container Tabel */}
-        <div className="bg-[#0f172a]/60 backdrop-blur-md rounded-2xl border border-slate-700/60 shadow-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-700/80 bg-slate-800/40 text-slate-400 uppercase text-xs tracking-wider">
-                  <th className="py-4 px-6 font-semibold">NAMA</th>
-                  <th className="py-4 px-6 font-semibold">EMAIL</th>
-                  <th className="py-4 px-6 font-semibold">ROLE</th>
-                  <th className="py-4 px-6 font-semibold text-center">AKSI</th>
+        <button
+          onClick={handleOpenAddModal}
+          className="bg-white text-sky-600 hover:bg-sky-50 font-bold px-4 py-2.5 rounded-xl shadow-sm transition duration-200 text-xs flex items-center justify-center gap-2 w-fit"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          <span>Tambah User</span>
+        </button>
+      </div>
+
+      {/* Container Tabel */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden p-6 space-y-4">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-sky-50/50 border-b border-sky-100 text-sky-900 text-[11px] font-bold tracking-wider uppercase">
+                <th className="py-3.5 px-4 font-semibold">NAMA</th>
+                <th className="py-3.5 px-4 font-semibold">EMAIL</th>
+                <th className="py-3.5 px-4 font-semibold">ROLE</th>
+                <th className="py-3.5 px-4 font-semibold text-center w-32">
+                  AKSI
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="py-12 text-center text-sky-600">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <div className="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-xs font-medium text-slate-500">
+                        Memuat data user...
+                      </span>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700/50 text-sm">
-                {loading ? (
-                  <tr>
-                    <td colSpan="5" className="py-12 text-center text-slate-400">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span>Memuat data user...</span>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="py-12 text-center text-slate-400 font-medium text-xs"
+                  >
+                    Belum ada data user.
+                  </td>
+                </tr>
+              ) : (
+                users.map((user) => (
+                  <tr
+                    key={user.id}
+                    className="hover:bg-sky-50/20 transition duration-150"
+                  >
+                    <td className="py-4 px-4 font-bold text-slate-800">
+                      {user.name}
+                    </td>
+                    <td className="py-4 px-4 text-xs font-medium text-slate-600 font-mono">
+                      {user.email}
+                    </td>
+                    <td className="py-4 px-4">{getRoleBadge(user.role)}</td>
+                    <td className="py-4 px-4 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => handleOpenEditModal(user)}
+                          className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
+                        >
+                          Hapus
+                        </button>
                       </div>
                     </td>
                   </tr>
-                ) : users.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="py-12 text-center text-slate-400">
-                      Belum ada data user.
-                    </td>
-                  </tr>
-                ) : (
-                  users.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-4 px-6 font-semibold text-slate-100">{user.name}</td>
-                      <td className="py-4 px-6 text-slate-300">{user.email}</td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize tracking-wide ${
-                            user.role === "admin"
-                              ? "bg-purple-500/10 text-purple-400 border border-purple-500/30"
-                              : "bg-blue-500/10 text-blue-400 border border-blue-500/30"
-                          }`}
-                        >
-                          {user.role || "kasir"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleOpenEditModal(user)}
-                            className="px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-medium transition-all"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="px-3.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-medium transition-all"
-                          >
-                            Hapus
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

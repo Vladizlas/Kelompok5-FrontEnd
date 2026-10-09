@@ -20,13 +20,13 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 h-screen sticky top-0 bg-white border-r border-sky-100 flex flex-col justify-between shrink-0">
+    <aside className="w-64 h-screen sticky top-0 bg-gradient-to-r from-sky-500 to-blue-600 border-r border-sky-100 flex flex-col justify-between shrink-0">
       <div>
         {/* Logo & Brand Header */}
         <div className="p-6 border-b border-sky-100 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-md shadow-sky-200">
             <svg
-              className="w-6 h-6"
+              className="w-6 h-6 text-slate-200"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -41,7 +41,7 @@ export default function Sidebar() {
           </div>
           <div>
             <h1 className="font-bold text-base text-slate-800 leading-tight">
-              Fanara <span className="text-sky-500">Laundry</span>
+              Fanara Laundry
             </h1>
             <span className="text-[10px] font-semibold tracking-wider text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full uppercase">
               Admin Panel
@@ -51,7 +51,7 @@ export default function Sidebar() {
 
         {/* Menu Navigasi */}
         <nav className="p-4 space-y-1">
-          <div className="px-3 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <div className="px-3 pb-2 text-[11px] font-bold text-slate-100 uppercase tracking-wider">
             Menu Utama
           </div>
           {menu.map((m) => (
@@ -62,7 +62,7 @@ export default function Sidebar() {
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   isActive
                     ? "bg-sky-500 text-white shadow-md shadow-sky-200"
-                    : "text-slate-600 hover:bg-sky-50 hover:text-sky-600"
+                    : "text-white hover:bg-sky-50 hover:text-sky-600"
                 }`
               }
             >
@@ -70,7 +70,7 @@ export default function Sidebar() {
                 <>
                   <svg
                     className={`w-5 h-5 transition-colors ${
-                      isActive ? "text-white" : "text-slate-400"
+                      isActive ? "text-white" : "text-slate-200"
                     }`}
                     fill="none"
                     stroke="currentColor"
@@ -98,7 +98,7 @@ export default function Sidebar() {
           className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all duration-200"
         >
           <svg
-            className="w-4 h-4"
+            className="w-4 h-4 text-rose-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

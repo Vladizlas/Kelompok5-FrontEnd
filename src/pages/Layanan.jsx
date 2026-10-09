@@ -87,7 +87,7 @@ function Layanan() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal mengambil data kategori"
+          "Gagal mengambil data kategori"
         );
       }
 
@@ -117,7 +117,7 @@ function Layanan() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal mengambil data layanan"
+          "Gagal mengambil data layanan"
         );
       }
 
@@ -150,7 +150,7 @@ function Layanan() {
 
       setError(
         error.message ||
-          "Gagal mengambil data"
+        "Gagal mengambil data"
       );
     } finally {
       setLoading(false);
@@ -215,7 +215,7 @@ function Layanan() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menambahkan kategori"
+          "Gagal menambahkan kategori"
         );
       }
 
@@ -264,7 +264,7 @@ function Layanan() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menghapus kategori"
+          "Gagal menghapus kategori"
         );
       }
 
@@ -397,7 +397,7 @@ function Layanan() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menyimpan layanan"
+          "Gagal menyimpan layanan"
         );
       }
 
@@ -442,7 +442,7 @@ function Layanan() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menghapus layanan"
+          "Gagal menghapus layanan"
         );
       }
 
@@ -583,7 +583,7 @@ function Layanan() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menyimpan harga"
+          "Gagal menyimpan harga"
         );
       }
 
@@ -628,7 +628,7 @@ function Layanan() {
       if (!response.ok) {
         throw new Error(
           result.message ||
-            "Gagal menghapus harga"
+          "Gagal menghapus harga"
         );
       }
 
@@ -662,12 +662,12 @@ function Layanan() {
 
   if (loading) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
+      <div className="min-h-[400px] flex items-center justify-center bg-white">
         <div className="text-center">
 
-          <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-10 h-10 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin mx-auto mb-4"></div>
 
-          <p className="text-gray-500">
+          <p className="text-slate-500 text-xs font-medium">
             Memuat data layanan...
           </p>
 
@@ -682,25 +682,25 @@ function Layanan() {
 
   if (!hasAccess) {
     return (
-      <div className="p-6">
+      <div className="p-6 bg-white min-h-screen">
 
-        <div className="bg-white border border-red-200 rounded-xl p-10 text-center">
+        <div className="bg-white border border-rose-200 rounded-2xl p-10 text-center shadow-sm">
 
           <div className="text-5xl mb-4">
             🔒
           </div>
 
-          <h2 className="text-xl font-bold text-gray-800">
+          <h2 className="text-xl font-bold text-slate-800">
             Akses Ditolak
           </h2>
 
-          <p className="text-gray-500 mt-2">
+          <p className="text-slate-500 mt-2 text-xs">
             Anda tidak memiliki izin untuk
             mengakses halaman layanan.
           </p>
 
           {user?.role && (
-            <p className="text-sm text-gray-400 mt-3">
+            <p className="text-xs text-slate-400 mt-3 font-mono">
               Role Anda: {user.role}
             </p>
           )}
@@ -712,31 +712,31 @@ function Layanan() {
   }
 
   // =========================================================
-  // RENDER
+  // RENDER (DENGAN TAMPILAN WHITE BACKGROUND & SKY BLUE HEADER)
   // =========================================================
 
   return (
-    <div className="p-6">
+    <div className="w-full min-h-screen bg-white p-6 lg:p-8 space-y-6 text-slate-800">
 
       {/* =====================================================
           HEADER
       ===================================================== */}
 
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-500/15 text-white">
 
         <div>
 
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-black tracking-tight">
             Layanan
           </h1>
 
-          <p className="text-white mt-1">
+          <p className="text-sky-100 text-xs font-medium mt-1">
             Kelola kategori, layanan, dan harga laundry
           </p>
 
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2.5">
 
           {/* TAMBAH KATEGORI */}
 
@@ -745,7 +745,7 @@ function Layanan() {
             onClick={
               handleOpenCategoryModal
             }
-            className="px-4 py-2.5 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition"
+            className="bg-white text-sky-600 hover:bg-sky-50 font-bold px-4 py-2.5 rounded-xl shadow-sm transition duration-200 text-xs flex items-center justify-center gap-1.5"
           >
             + Kategori
           </button>
@@ -760,11 +760,10 @@ function Layanan() {
             disabled={
               categories.length === 0
             }
-            className={`px-4 py-2.5 rounded-lg text-white transition ${
-              categories.length === 0
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
+            className={`px-4 py-2.5 font-bold rounded-xl text-xs transition shadow-sm ${categories.length === 0
+                ? "bg-sky-300 text-white/80 cursor-not-allowed"
+                : "bg-sky-700 hover:bg-sky-800 text-white"
+              }`}
           >
             + Layanan
           </button>
@@ -778,21 +777,17 @@ function Layanan() {
       ===================================================== */}
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex justify-between items-center gap-4 text-xs font-medium shadow-sm">
 
-          <div className="flex justify-between items-center gap-4">
+          <span>{error}</span>
 
-            <span>{error}</span>
-
-            <button
-              type="button"
-              onClick={loadData}
-              className="text-sm font-medium underline"
-            >
-              Coba lagi
-            </button>
-
-          </div>
+          <button
+            type="button"
+            onClick={loadData}
+            className="text-xs bg-rose-100 hover:bg-rose-200 text-rose-800 font-semibold px-3 py-1.5 rounded-lg transition"
+          >
+            Coba lagi
+          </button>
 
         </div>
       )}
@@ -801,27 +796,27 @@ function Layanan() {
           SUMMARY
       ===================================================== */}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-        <div className="bg-white border rounded-xl p-5">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
 
-          <p className="text-sm text-gray-500">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
             Total Kategori
           </p>
 
-          <p className="text-2xl font-bold text-gray-800 mt-1">
+          <p className="text-3xl font-black text-slate-800 mt-2">
             {categories.length}
           </p>
 
         </div>
 
-        <div className="bg-white border rounded-xl p-5">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
 
-          <p className="text-sm text-gray-500">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
             Total Layanan
           </p>
 
-          <p className="text-2xl font-bold text-gray-800 mt-1">
+          <p className="text-3xl font-black text-sky-600 mt-2">
             {services.length}
           </p>
 
@@ -835,17 +830,17 @@ function Layanan() {
 
       {categories.length === 0 ? (
 
-        <div className="bg-white border rounded-xl p-10 text-center">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-10 text-center shadow-sm">
 
           <div className="text-4xl mb-4">
             🧺
           </div>
 
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-base font-bold text-slate-800">
             Belum ada kategori
           </h2>
 
-          <p className="text-gray-500 mt-1 mb-5">
+          <p className="text-slate-400 text-xs mt-1 mb-5">
             Tambahkan kategori layanan laundry terlebih dahulu.
           </p>
 
@@ -854,7 +849,7 @@ function Layanan() {
             onClick={
               handleOpenCategoryModal
             }
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm"
           >
             + Tambah Kategori
           </button>
@@ -864,7 +859,7 @@ function Layanan() {
       ) : (
 
         /* =====================================================
-           CATEGORY LIST
+            CATEGORY LIST
         ===================================================== */
 
         <div className="space-y-8">
@@ -874,19 +869,20 @@ function Layanan() {
 
               <section
                 key={category.id}
+                className="space-y-4"
               >
 
                 {/* CATEGORY HEADER */}
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
                   <div>
 
-                    <h2 className="text-xl font-bold text-white">
+                    <h2 className="text-xl font-black text-slate-800">
                       {category.name}
                     </h2>
 
-                    <p className="text-sm text-white mt-1">
+                    <p className="text-xs font-semibold text-sky-600 mt-0.5">
                       {category.services.length}{" "}
                       layanan
                     </p>
@@ -904,7 +900,7 @@ function Layanan() {
                           category.id
                         )
                       }
-                      className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 transition"
                     >
                       + Layanan
                     </button>
@@ -922,12 +918,11 @@ function Layanan() {
                           category
                         )
                       }
-                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${
-                        category.services
+                      className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition ${category.services
                           .length > 0
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-red-50 text-red-600 hover:bg-red-100"
-                      }`}
+                          ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                          : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                        }`}
                     >
                       {category.services
                         .length > 0
@@ -945,11 +940,11 @@ function Layanan() {
 
                 {category.services.length === 0 ? (
 
-                  <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6">
+                  <div className="bg-sky-50/30 border border-dashed border-sky-200 rounded-2xl p-6">
 
                     <div className="text-center">
 
-                      <p className="text-gray-500 text-sm">
+                      <p className="text-slate-400 text-xs">
                         Belum ada layanan pada kategori ini.
                       </p>
 
@@ -960,7 +955,7 @@ function Layanan() {
                             category.id
                           )
                         }
-                        className="text-sm text-blue-600 font-medium hover:text-blue-700 mt-2"
+                        className="text-xs text-sky-600 font-bold hover:text-sky-800 mt-2 inline-block"
                       >
                         + Tambah layanan
                       </button>
@@ -972,7 +967,7 @@ function Layanan() {
                 ) : (
 
                   /* =====================================================
-                     SERVICE LIST FULL WIDTH
+                      SERVICE LIST FULL WIDTH
                   ===================================================== */
 
                   <div className="space-y-4">
@@ -982,25 +977,25 @@ function Layanan() {
 
                         <div
                           key={service.id}
-                          className="w-full bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition"
+                          className="w-full bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:border-sky-200 transition"
                         >
 
                           {/* =================================================
                               SERVICE HEADER
                           ================================================= */}
 
-                          <div className="p-5">
+                          <div className="p-6">
 
                             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
 
                               <div className="min-w-0 flex-1">
 
-                                <h3 className="text-lg font-semibold text-gray-800">
+                                <h3 className="text-base font-extrabold text-slate-800">
                                   {service.name}
                                 </h3>
 
                                 {service.description && (
-                                  <p className="text-sm text-gray-500 mt-1">
+                                  <p className="text-xs text-slate-500 mt-1">
                                     {
                                       service.description
                                     }
@@ -1011,7 +1006,7 @@ function Layanan() {
 
                               {/* SERVICE ACTION */}
 
-                              <div className="flex gap-2 shrink-0">
+                              <div className="flex gap-1.5 shrink-0">
 
                                 <button
                                   type="button"
@@ -1020,7 +1015,7 @@ function Layanan() {
                                       service
                                     )
                                   }
-                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                                  className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
                                 >
                                   Edit
                                 </button>
@@ -1032,7 +1027,7 @@ function Layanan() {
                                       service
                                     )
                                   }
-                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+                                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
                                 >
                                   Hapus
                                 </button>
@@ -1047,11 +1042,11 @@ function Layanan() {
                               PRICE SECTION
                           ================================================= */}
 
-                          <div className="border-t bg-gray-50 p-5">
+                          <div className="border-t border-slate-100 bg-sky-50/20 p-6">
 
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
 
-                              <h4 className="text-sm font-semibold text-gray-700">
+                              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                                 Daftar Harga
                               </h4>
 
@@ -1062,7 +1057,7 @@ function Layanan() {
                                     service.id
                                   )
                                 }
-                                className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                                className="text-xs font-bold text-sky-600 hover:text-sky-800"
                               >
                                 + Tambah Harga
                               </button>
@@ -1074,16 +1069,16 @@ function Layanan() {
                             ================================================= */}
 
                             {service.prices &&
-                            service.prices.length >
+                              service.prices.length >
                               0 ? (
 
                               <div className="w-full overflow-x-auto">
 
-                                <div className="min-w-[600px]">
+                                <div className="min-w-[500px]">
 
                                   {/* PRICE HEADER */}
 
-                                  <div className="grid grid-cols-[1fr_1fr_160px] gap-4 px-4 py-2 text-xs font-semibold text-gray-500 uppercase">
+                                  <div className="grid grid-cols-[1fr_1fr_120px] gap-4 px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
 
                                     <div>
                                       Jenis Item
@@ -1093,7 +1088,7 @@ function Layanan() {
                                       Harga
                                     </div>
 
-                                    <div className="text-right">
+                                    <div className="text-center">
                                       Aksi
                                     </div>
 
@@ -1110,14 +1105,14 @@ function Layanan() {
                                           key={
                                             price.id
                                           }
-                                          className="grid grid-cols-[1fr_1fr_160px] gap-4 items-center bg-white border border-gray-200 rounded-lg px-4 py-3"
+                                          className="grid grid-cols-[1fr_1fr_120px] gap-4 items-center bg-white border border-slate-200/60 rounded-xl px-4 py-3"
                                         >
 
                                           {/* ITEM */}
 
                                           <div className="min-w-0">
 
-                                            <p className="text-sm font-medium text-gray-700 truncate">
+                                            <p className="text-xs font-bold text-slate-800 truncate">
                                               {
                                                 price.itemType
                                               }
@@ -1129,7 +1124,7 @@ function Layanan() {
 
                                           <div>
 
-                                            <p className="text-sm font-semibold text-gray-900">
+                                            <p className="text-xs font-bold text-slate-800 font-mono">
                                               Rp{" "}
                                               {Number(
                                                 price.price
@@ -1146,7 +1141,7 @@ function Layanan() {
 
                                           {/* ACTION */}
 
-                                          <div className="flex justify-end gap-2">
+                                          <div className="flex justify-center items-center gap-1.5">
 
                                             <button
                                               type="button"
@@ -1155,7 +1150,7 @@ function Layanan() {
                                                   price
                                                 )
                                               }
-                                              className="px-2.5 py-1 text-xs rounded-md bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                                              className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-2 py-1 rounded-lg transition"
                                             >
                                               Edit
                                             </button>
@@ -1167,7 +1162,7 @@ function Layanan() {
                                                   price
                                                 )
                                               }
-                                              className="px-2.5 py-1 text-xs rounded-md bg-red-50 text-red-600 hover:bg-red-100"
+                                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2 py-1 rounded-lg transition"
                                             >
                                               Hapus
                                             </button>
@@ -1187,9 +1182,9 @@ function Layanan() {
 
                             ) : (
 
-                              <div className="py-6 text-center bg-white border border-dashed border-gray-300 rounded-lg">
+                              <div className="py-6 text-center bg-white border border-dashed border-slate-200 rounded-xl">
 
-                                <p className="text-sm text-gray-400">
+                                <p className="text-xs text-slate-400">
                                   Belum ada harga.
                                 </p>
 
@@ -1200,7 +1195,7 @@ function Layanan() {
                                       service.id
                                     )
                                   }
-                                  className="text-sm text-blue-600 mt-1 hover:underline"
+                                  className="text-xs text-sky-600 font-bold mt-1 hover:underline"
                                 >
                                   Tambahkan harga
                                 </button>
@@ -1221,6 +1216,7 @@ function Layanan() {
                 )}
 
               </section>
+
             )
           )}
 
@@ -1229,19 +1225,19 @@ function Layanan() {
       )}
 
       {/* =====================================================
-          MODAL CATEGORY
+          MODAL KATEGORI
       ===================================================== */}
 
       {showCategoryModal && (
 
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
 
-          <div className="w-full max-w-md bg-white rounded-xl shadow-xl">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md overflow-hidden my-8">
 
-            <div className="flex items-center justify-between px-6 py-4 border-b">
+            <div className="bg-sky-500 text-white px-6 py-4 flex items-center justify-between">
 
-              <h2 className="text-lg font-bold text-gray-800">
-                Tambah Kategori
+              <h2 className="text-base font-bold">
+                Tambah Kategori Baru
               </h2>
 
               <button
@@ -1249,9 +1245,9 @@ function Layanan() {
                 onClick={
                   handleCloseCategoryModal
                 }
-                className="text-black hover:text-gray-600 text-xl"
+                className="text-white/80 hover:text-white font-bold text-xl leading-none"
               >
-                ×
+                &times;
               </button>
 
             </div>
@@ -1260,11 +1256,12 @@ function Layanan() {
               onSubmit={
                 handleCreateCategory
               }
+              className="p-6 space-y-4"
             >
 
-              <div className="p-6">
+              <div>
 
-                <label className="block text-sm font-medium text-black mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Nama Kategori
                 </label>
 
@@ -1279,28 +1276,28 @@ function Layanan() {
                   placeholder="Contoh: Cuci Kering"
                   maxLength={100}
                   autoFocus
-                  className="w-full text-black border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                 />
 
               </div>
 
-              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
+              <div className="flex justify-end gap-3 pt-2">
 
                 <button
                   type="button"
                   onClick={
                     handleCloseCategoryModal
                   }
-                  className="px-4 py-2 border border-gray-300 bg-white rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
                 >
                   Batal
                 </button>
 
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm"
                 >
-                  Simpan
+                  Simpan Kategori
                 </button>
 
               </div>
@@ -1314,21 +1311,21 @@ function Layanan() {
       )}
 
       {/* =====================================================
-          MODAL SERVICE
+          MODAL LAYANAN
       ===================================================== */}
 
       {showServiceModal && (
 
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
 
-          <div className="w-full max-w-md bg-white rounded-xl shadow-xl">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md overflow-hidden my-8">
 
-            <div className="flex items-center justify-between px-6 py-4 border-b">
+            <div className="bg-sky-500 text-white px-6 py-4 flex items-center justify-between">
 
-              <h2 className="text-lg font-bold text-gray-800">
+              <h2 className="text-base font-bold">
                 {editingService
                   ? "Edit Layanan"
-                  : "Tambah Layanan"}
+                  : "Tambah Layanan Baru"}
               </h2>
 
               <button
@@ -1336,9 +1333,9 @@ function Layanan() {
                 onClick={
                   handleCloseServiceModal
                 }
-                className="text-gray-400 hover:text-gray-600 text-xl"
+                className="text-white/80 hover:text-white font-bold text-xl leading-none"
               >
-                ×
+                &times;
               </button>
 
             </div>
@@ -1347,122 +1344,119 @@ function Layanan() {
               onSubmit={
                 handleSubmitService
               }
+              className="p-6 space-y-4"
             >
 
-              <div className="p-6 space-y-4">
+              {/* CATEGORY */}
 
-                {/* CATEGORY */}
+              <div>
 
-                <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Kategori
+                </label>
 
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kategori
-                  </label>
+                <select
+                  name="categoryId"
+                  value={
+                    serviceForm.categoryId
+                  }
+                  onChange={
+                    handleServiceFormChange
+                  }
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
+                >
 
-                  <select
-                    name="categoryId"
-                    value={
-                      serviceForm.categoryId
-                    }
-                    onChange={
-                      handleServiceFormChange
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                  >
+                  <option value="">
+                    -- Pilih Kategori --
+                  </option>
 
-                    <option value="">
-                      Pilih kategori
-                    </option>
+                  {categories.map(
+                    (category) => (
+                      <option
+                        key={
+                          category.id
+                        }
+                        value={
+                          category.id
+                        }
+                      >
+                        {
+                          category.name
+                        }
+                      </option>
+                    )
+                  )}
 
-                    {categories.map(
-                      (category) => (
-                        <option
-                          key={
-                            category.id
-                          }
-                          value={
-                            category.id
-                          }
-                        >
-                          {
-                            category.name
-                          }
-                        </option>
-                      )
-                    )}
-
-                  </select>
-
-                </div>
-
-                {/* NAME */}
-
-                <div>
-
-                  <label className="block text-sm font-medium text-black mb-2">
-                    Nama Layanan
-                  </label>
-
-                  <input
-                    type="text"
-                    name="name"
-                    value={
-                      serviceForm.name
-                    }
-                    onChange={
-                      handleServiceFormChange
-                    }
-                    placeholder="Contoh: Cuci Kiloan"
-                    maxLength={100}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                  />
-
-                </div>
-
-                {/* DESCRIPTION */}
-
-                <div>
-
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Deskripsi
-                  </label>
-
-                  <textarea
-                    name="description"
-                    value={
-                      serviceForm.description
-                    }
-                    onChange={
-                      handleServiceFormChange
-                    }
-                    placeholder="Contoh: Layanan cuci pakaian berdasarkan berat"
-                    rows={4}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-black resize-none"
-                  />
-
-                </div>
+                </select>
 
               </div>
 
-              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
+              {/* NAME */}
+
+              <div>
+
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Nama Layanan
+                </label>
+
+                <input
+                  type="text"
+                  name="name"
+                  value={
+                    serviceForm.name
+                  }
+                  onChange={
+                    handleServiceFormChange
+                  }
+                  placeholder="Contoh: Cuci Kiloan"
+                  maxLength={100}
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
+                />
+
+              </div>
+
+              {/* DESCRIPTION */}
+
+              <div>
+
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Deskripsi (Opsional)
+                </label>
+
+                <textarea
+                  name="description"
+                  value={
+                    serviceForm.description
+                  }
+                  onChange={
+                    handleServiceFormChange
+                  }
+                  placeholder="Deskripsi singkat mengenai layanan..."
+                  rows={3}
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition resize-none"
+                />
+
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
 
                 <button
                   type="button"
                   onClick={
                     handleCloseServiceModal
                   }
-                  className="px-4 py-2 border border-gray-300 bg-white rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
                 >
                   Batal
                 </button>
 
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm"
                 >
                   {editingService
-                    ? "Update"
-                    : "Simpan"}
+                    ? "Update Layanan"
+                    : "Simpan Layanan"}
                 </button>
 
               </div>
@@ -1476,21 +1470,21 @@ function Layanan() {
       )}
 
       {/* =====================================================
-          MODAL PRICE
+          MODAL HARGA
       ===================================================== */}
 
       {showPriceModal && (
 
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
 
-          <div className="w-full max-w-md bg-white rounded-xl shadow-xl">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md overflow-hidden my-8">
 
-            <div className="flex items-center justify-between px-6 py-4 border-b">
+            <div className="bg-sky-500 text-white px-6 py-4 flex items-center justify-between">
 
-              <h2 className="text-lg font-bold text-gray-800">
+              <h2 className="text-base font-bold">
                 {editingPrice
                   ? "Edit Harga"
-                  : "Tambah Harga"}
+                  : "Tambah Harga Baru"}
               </h2>
 
               <button
@@ -1498,9 +1492,9 @@ function Layanan() {
                 onClick={
                   handleClosePriceModal
                 }
-                className="text-gray-400 hover:text-gray-600 text-xl"
+                className="text-white/80 hover:text-white font-bold text-xl leading-none"
               >
-                ×
+                &times;
               </button>
 
             </div>
@@ -1509,92 +1503,93 @@ function Layanan() {
               onSubmit={
                 handleSubmitPrice
               }
+              className="p-6 space-y-4"
             >
 
-              <div className="p-6 space-y-4">
+              {/* SERVICE */}
 
-                {/* SERVICE */}
+              <div>
+
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Layanan
+                </label>
+
+                <select
+                  name="serviceId"
+                  value={
+                    priceForm.serviceId
+                  }
+                  onChange={
+                    handlePriceFormChange
+                  }
+                  disabled={
+                    Boolean(editingPrice)
+                  }
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition disabled:bg-slate-100 disabled:text-slate-500"
+                >
+
+                  <option value="">
+                    -- Pilih Layanan --
+                  </option>
+
+                  {services.map(
+                    (service) => (
+                      <option
+                        key={
+                          service.id
+                        }
+                        value={
+                          service.id
+                        }
+                      >
+                        {
+                          service.name
+                        }
+                      </option>
+                    )
+                  )}
+
+                </select>
+
+              </div>
+
+              {/* ITEM TYPE */}
+
+              <div>
+
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Jenis Item
+                </label>
+
+                <input
+                  type="text"
+                  name="itemType"
+                  value={
+                    priceForm.itemType
+                  }
+                  onChange={
+                    handlePriceFormChange
+                  }
+                  placeholder="Contoh: Pakaian, Bed Cover, Selimut"
+                  maxLength={100}
+                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
+                />
+
+              </div>
+
+              {/* PRICE & UNIT */}
+
+              <div className="grid grid-cols-2 gap-3">
 
                 <div>
 
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Layanan
-                  </label>
-
-                  <select
-                    name="serviceId"
-                    value={
-                      priceForm.serviceId
-                    }
-                    onChange={
-                      handlePriceFormChange
-                    }
-                    disabled={
-                      Boolean(editingPrice)
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 text-black"
-                  >
-
-                    <option value="">
-                      Pilih layanan
-                    </option>
-
-                    {services.map(
-                      (service) => (
-                        <option
-                          key={
-                            service.id
-                          }
-                          value={
-                            service.id
-                          }
-                        >
-                          {
-                            service.name
-                          }
-                        </option>
-                      )
-                    )}
-
-                  </select>
-
-                </div>
-
-                {/* ITEM TYPE */}
-
-                <div>
-
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Jenis Item
-                  </label>
-
-                  <input
-                    type="text"
-                    name="itemType"
-                    value={
-                      priceForm.itemType
-                    }
-                    onChange={
-                      handlePriceFormChange
-                    }
-                    placeholder="Contoh: Pakaian"
-                    maxLength={100}
-                    className="text-black w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-
-                </div>
-
-                {/* PRICE */}
-
-                <div>
-
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Harga
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Harga (Rp)
                   </label>
 
                   <div className="relative">
 
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">
                       Rp
                     </span>
 
@@ -1610,19 +1605,17 @@ function Layanan() {
                       placeholder="7000"
                       min="0"
                       step="1"
-                      className="text-black w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                     />
 
                   </div>
 
                 </div>
 
-                {/* UNIT */}
-
                 <div>
 
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Satuan
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Satuan Unit
                   </label>
 
                   <select
@@ -1633,15 +1626,15 @@ function Layanan() {
                     onChange={
                       handlePriceFormChange
                     }
-                    className="text-black w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                   >
 
                     <option value="kg">
-                      Kilogram (kg)
+                      kg (Kilogram)
                     </option>
 
                     <option value="pcs">
-                      Pieces (pcs)
+                      pcs (Satuan)
                     </option>
 
                   </select>
@@ -1650,25 +1643,25 @@ function Layanan() {
 
               </div>
 
-              <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
+              <div className="flex justify-end gap-3 pt-2">
 
                 <button
                   type="button"
                   onClick={
                     handleClosePriceModal
                   }
-                  className="px-4 py-2 border border-gray-300 bg-white rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
                 >
                   Batal
                 </button>
 
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm"
                 >
                   {editingPrice
-                    ? "Update"
-                    : "Simpan"}
+                    ? "Update Harga"
+                    : "Simpan Harga"}
                 </button>
 
               </div>
