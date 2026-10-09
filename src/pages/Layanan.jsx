@@ -1,70 +1,56 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+// Helper Ambil Header Token JWT
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    Authorization: token ? `Bearer ${token}` : "",
+  };
+};
 
 function Layanan() {
   const { user } = useOutletContext();
 
-  console.log("USER DI LAYANAN:", user);
-
   // =========================================================
   // ROLE / ACCESS CONTROL
   // =========================================================
+  const userRole = user?.role?.toLowerCase() || "kasir";
 
-  const allowedRoles = ["admin", "owner"];
+  // Kasir, Admin, dan Owner semuanya BERHAK melihat layanan
+  const allowedRoles = ["kasir", "admin", "owner"];
+  const hasAccess = allowedRoles.includes(userRole);
 
-  const userRole = user?.role?.toLowerCase();
-
-  const hasAccess =
-    Boolean(userRole) &&
-    allowedRoles.includes(userRole);
+  // Fitur Modifikasi (CRUD) HANYA untuk Admin & Owner
+  const canModify = ["admin", "owner"].includes(userRole);
 
   // =========================================================
   // STATE
   // =========================================================
-
   const [categories, setCategories] = useState([]);
   const [services, setServices] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // =========================================================
-  // CATEGORY MODAL
-  // =========================================================
-
-  const [showCategoryModal, setShowCategoryModal] =
-    useState(false);
-
+  // CATEGORY MODAL STATE
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categoryName, setCategoryName] = useState("");
 
-  // =========================================================
-  // SERVICE MODAL
-  // =========================================================
-
-  const [showServiceModal, setShowServiceModal] =
-    useState(false);
-
-  const [editingService, setEditingService] =
-    useState(null);
-
+  // SERVICE MODAL STATE
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [editingService, setEditingService] = useState(null);
   const [serviceForm, setServiceForm] = useState({
     categoryId: "",
     name: "",
     description: "",
   });
 
-  // =========================================================
-  // PRICE MODAL
-  // =========================================================
-
-  const [showPriceModal, setShowPriceModal] =
-    useState(false);
-
-  const [editingPrice, setEditingPrice] =
-    useState(null);
-
+  // PRICE MODAL STATE
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [editingPrice, setEditingPrice] = useState(null);
   const [priceForm, setPriceForm] = useState({
     serviceId: "",
     itemType: "",
@@ -73,61 +59,49 @@ function Layanan() {
   });
 
   // =========================================================
-  // FETCH CATEGORIES
+  // FETCH CATEGORIES (DENGAN BEARER TOKEN)
   // =========================================================
-
   const fetchCategories = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/categories`
-      );
+      const response = await fetch(`${API_URL}/api/categories`, {
+        headers: getAuthHeaders(),
+      });
 
       const result = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          result.message ||
-          "Gagal mengambil data kategori"
+          result.message || "Gagal mengambil data kategori"
         );
       }
 
-      setCategories(result.data || []);
+      setCategories(Array.isArray(result) ? result : result.data || []);
     } catch (error) {
-      console.error(
-        "Error fetch categories:",
-        error
-      );
-
+      console.error("Error fetch categories:", error);
       throw error;
     }
   };
 
   // =========================================================
-  // FETCH SERVICES
+  // FETCH SERVICES (DENGAN BEARER TOKEN)
   // =========================================================
-
   const fetchServices = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/services`
-      );
+      const response = await fetch(`${API_URL}/api/services`, {
+        headers: getAuthHeaders(),
+      });
 
       const result = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          result.message ||
-          "Gagal mengambil data layanan"
+          result.message || "Gagal mengambil data layanan"
         );
       }
 
-      setServices(result.data || []);
+      setServices(Array.isArray(result) ? result : result.data || []);
     } catch (error) {
-      console.error(
-        "Error fetch services:",
-        error
-      );
-
+      console.error("Error fetch services:", error);
       throw error;
     }
   };
@@ -135,45 +109,32 @@ function Layanan() {
   // =========================================================
   // LOAD ALL DATA
   // =========================================================
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      await Promise.all([
-        fetchCategories(),
-        fetchServices(),
-      ]);
+      await Promise.all([fetchCategories(), fetchServices()]);
     } catch (error) {
       console.error(error);
-
-      setError(
-        error.message ||
-        "Gagal mengambil data"
-      );
+      setError(error.message || "Gagal mengambil data layanan");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // =========================================================
   // INITIAL LOAD
-  // =========================================================
-
   useEffect(() => {
     if (!hasAccess) {
       setLoading(false);
       return;
     }
-
     loadData();
-  }, [hasAccess]);
+  }, [hasAccess, loadData]);
 
   // =========================================================
-  // CATEGORY
+  // CATEGORY HANDLERS
   // =========================================================
-
   const handleOpenCategoryModal = () => {
     setCategoryName("");
     setShowCategoryModal(true);
@@ -184,10 +145,6 @@ function Layanan() {
     setShowCategoryModal(false);
   };
 
-  // =========================================================
-  // CREATE CATEGORY
-  // =========================================================
-
   const handleCreateCategory = async (e) => {
     e.preventDefault();
 
@@ -197,32 +154,20 @@ function Layanan() {
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/categories`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: categoryName.trim(),
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/categories`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ name: categoryName.trim() }),
+      });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          result.message ||
-          "Gagal menambahkan kategori"
-        );
+        throw new Error(result.message || "Gagal menambahkan kategori");
       }
 
       alert("Kategori berhasil ditambahkan");
-
       handleCloseCategoryModal();
-
       await fetchCategories();
     } catch (error) {
       console.error(error);
@@ -230,46 +175,27 @@ function Layanan() {
     }
   };
 
-  // =========================================================
-  // DELETE CATEGORY
-  // =========================================================
-
-  const handleDeleteCategory = async (
-    category
-  ) => {
-    if (category.services.length > 0) {
-      alert(
-        "Kategori tidak dapat dihapus karena masih memiliki layanan. Hapus semua layanan dalam kategori terlebih dahulu."
-      );
-
+  const handleDeleteCategory = async (category) => {
+    if (category.services && category.services.length > 0) {
+      alert("Hapus semua layanan dalam kategori ini terlebih dahulu.");
       return;
     }
 
-    const confirmed = window.confirm(
-      `Yakin ingin menghapus kategori "${category.name}"?`
-    );
-
-    if (!confirmed) return;
+    if (!window.confirm(`Yakin ingin menghapus kategori "${category.name}"?`)) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/categories/${category.id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${API_URL}/api/categories/${category.id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          result.message ||
-          "Gagal menghapus kategori"
-        );
+        throw new Error(result.message || "Gagal menghapus kategori");
       }
 
       alert("Kategori berhasil dihapus");
-
       await fetchCategories();
     } catch (error) {
       console.error(error);
@@ -278,137 +204,64 @@ function Layanan() {
   };
 
   // =========================================================
-  // SERVICE
+  // SERVICE HANDLERS
   // =========================================================
-
   const handleOpenCreateService = () => {
     setEditingService(null);
-
-    setServiceForm({
-      categoryId: "",
-      name: "",
-      description: "",
-    });
-
+    setServiceForm({ categoryId: categories[0]?.id || "", name: "", description: "" });
     setShowServiceModal(true);
   };
 
-  const handleOpenCreateServiceForCategory = (
-    categoryId
-  ) => {
+  const handleOpenCreateServiceForCategory = (categoryId) => {
     setEditingService(null);
-
-    setServiceForm({
-      categoryId: categoryId,
-      name: "",
-      description: "",
-    });
-
+    setServiceForm({ categoryId, name: "", description: "" });
     setShowServiceModal(true);
   };
-
-  // =========================================================
-  // EDIT SERVICE
-  // =========================================================
 
   const handleOpenEditService = (service) => {
     setEditingService(service);
-
     setServiceForm({
       categoryId: service.categoryId,
       name: service.name,
       description: service.description || "",
     });
-
     setShowServiceModal(true);
   };
 
-  // =========================================================
-  // CLOSE SERVICE MODAL
-  // =========================================================
-
   const handleCloseServiceModal = () => {
     setEditingService(null);
-
-    setServiceForm({
-      categoryId: "",
-      name: "",
-      description: "",
-    });
-
+    setServiceForm({ categoryId: "", name: "", description: "" });
     setShowServiceModal(false);
   };
-
-  // =========================================================
-  // SERVICE FORM CHANGE
-  // =========================================================
-
-  const handleServiceFormChange = (e) => {
-    const { name, value } = e.target;
-
-    setServiceForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // =========================================================
-  // CREATE / UPDATE SERVICE
-  // =========================================================
 
   const handleSubmitService = async (e) => {
     e.preventDefault();
 
-    if (!serviceForm.categoryId) {
-      alert("Kategori wajib dipilih");
-      return;
-    }
-
-    if (!serviceForm.name.trim()) {
-      alert("Nama layanan wajib diisi");
-      return;
-    }
+    if (!serviceForm.categoryId) return alert("Kategori wajib dipilih");
+    if (!serviceForm.name.trim()) return alert("Nama layanan wajib diisi");
 
     try {
       const isEdit = Boolean(editingService);
-
       const url = isEdit
         ? `${API_URL}/api/services/${editingService.id}`
         : `${API_URL}/api/services`;
 
       const response = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
-          categoryId: Number(
-            serviceForm.categoryId
-          ),
+          categoryId: Number(serviceForm.categoryId),
           name: serviceForm.name.trim(),
-          description:
-            serviceForm.description.trim() ||
-            null,
+          description: serviceForm.description.trim() || null,
         }),
       });
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          result.message ||
-          "Gagal menyimpan layanan"
-        );
-      }
+      if (!response.ok) throw new Error(result.message || "Gagal menyimpan layanan");
 
-      alert(
-        isEdit
-          ? "Layanan berhasil diupdate"
-          : "Layanan berhasil ditambahkan"
-      );
-
+      alert(isEdit ? "Layanan berhasil diupdate" : "Layanan berhasil ditambahkan");
       handleCloseServiceModal();
-
       await fetchServices();
     } catch (error) {
       console.error(error);
@@ -416,38 +269,20 @@ function Layanan() {
     }
   };
 
-  // =========================================================
-  // DELETE SERVICE
-  // =========================================================
-
-  const handleDeleteService = async (
-    service
-  ) => {
-    const confirmed = window.confirm(
-      `Yakin ingin menghapus layanan "${service.name}"?\n\nSemua harga yang terkait dengan layanan ini juga akan dihapus.`
-    );
-
-    if (!confirmed) return;
+  const handleDeleteService = async (service) => {
+    if (!window.confirm(`Yakin ingin menghapus layanan "${service.name}"?`)) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/services/${service.id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${API_URL}/api/services/${service.id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          result.message ||
-          "Gagal menghapus layanan"
-        );
-      }
+      if (!response.ok) throw new Error(result.message || "Gagal menghapus layanan");
 
       alert("Layanan berhasil dihapus");
-
       await fetchServices();
     } catch (error) {
       console.error(error);
@@ -456,123 +291,49 @@ function Layanan() {
   };
 
   // =========================================================
-  // PRICE
+  // PRICE HANDLERS
   // =========================================================
-
-  const handleOpenCreatePrice = (
-    serviceId
-  ) => {
+  const handleOpenCreatePrice = (serviceId) => {
     setEditingPrice(null);
-
-    setPriceForm({
-      serviceId: serviceId,
-      itemType: "",
-      price: "",
-      unit: "kg",
-    });
-
+    setPriceForm({ serviceId, itemType: "", price: "", unit: "kg" });
     setShowPriceModal(true);
   };
 
-  // =========================================================
-  // EDIT PRICE
-  // =========================================================
-
   const handleOpenEditPrice = (price) => {
     setEditingPrice(price);
-
     setPriceForm({
       serviceId: price.serviceId,
       itemType: price.itemType,
       price: price.price,
       unit: price.unit,
     });
-
     setShowPriceModal(true);
   };
 
-  // =========================================================
-  // CLOSE PRICE MODAL
-  // =========================================================
-
   const handleClosePriceModal = () => {
     setEditingPrice(null);
-
-    setPriceForm({
-      serviceId: "",
-      itemType: "",
-      price: "",
-      unit: "kg",
-    });
-
+    setPriceForm({ serviceId: "", itemType: "", price: "", unit: "kg" });
     setShowPriceModal(false);
   };
-
-  // =========================================================
-  // PRICE FORM CHANGE
-  // =========================================================
-
-  const handlePriceFormChange = (e) => {
-    const { name, value } = e.target;
-
-    setPriceForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // =========================================================
-  // CREATE / UPDATE PRICE
-  // =========================================================
 
   const handleSubmitPrice = async (e) => {
     e.preventDefault();
 
-    if (!priceForm.serviceId) {
-      alert("Service wajib dipilih");
-      return;
-    }
-
-    if (!priceForm.itemType.trim()) {
-      alert("Jenis item wajib diisi");
-      return;
-    }
-
-    if (
-      priceForm.price === "" ||
-      Number(priceForm.price) < 0
-    ) {
-      alert("Harga tidak valid");
-      return;
-    }
-
-    if (
-      !["kg", "pcs"].includes(
-        priceForm.unit
-      )
-    ) {
-      alert("Unit harus kg atau pcs");
-      return;
-    }
+    if (!priceForm.itemType.trim()) return alert("Jenis item wajib diisi");
+    if (priceForm.price === "" || Number(priceForm.price) < 0) return alert("Harga tidak valid");
 
     try {
       const isEdit = Boolean(editingPrice);
-
       const url = isEdit
         ? `${API_URL}/api/service-prices/${editingPrice.id}`
         : `${API_URL}/api/service-prices`;
 
       const response = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
-          serviceId: Number(
-            priceForm.serviceId
-          ),
-          itemType:
-            priceForm.itemType.trim(),
+          serviceId: Number(priceForm.serviceId),
+          itemType: priceForm.itemType.trim(),
           price: Number(priceForm.price),
           unit: priceForm.unit,
         }),
@@ -580,21 +341,10 @@ function Layanan() {
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          result.message ||
-          "Gagal menyimpan harga"
-        );
-      }
+      if (!response.ok) throw new Error(result.message || "Gagal menyimpan harga");
 
-      alert(
-        isEdit
-          ? "Harga berhasil diupdate"
-          : "Harga berhasil ditambahkan"
-      );
-
+      alert(isEdit ? "Harga berhasil diupdate" : "Harga berhasil ditambahkan");
       handleClosePriceModal();
-
       await fetchServices();
     } catch (error) {
       console.error(error);
@@ -602,38 +352,20 @@ function Layanan() {
     }
   };
 
-  // =========================================================
-  // DELETE PRICE
-  // =========================================================
-
-  const handleDeletePrice = async (
-    price
-  ) => {
-    const confirmed = window.confirm(
-      `Yakin ingin menghapus harga "${price.itemType}"?`
-    );
-
-    if (!confirmed) return;
+  const handleDeletePrice = async (price) => {
+    if (!window.confirm(`Yakin ingin menghapus harga "${price.itemType}"?`)) return;
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/service-prices/${price.id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${API_URL}/api/service-prices/${price.id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          result.message ||
-          "Gagal menghapus harga"
-        );
-      }
+      if (!response.ok) throw new Error(result.message || "Gagal menghapus harga");
 
       alert("Harga berhasil dihapus");
-
       await fetchServices();
     } catch (error) {
       console.error(error);
@@ -641,1039 +373,330 @@ function Layanan() {
     }
   };
 
-  // =========================================================
-  // GROUP SERVICES BY CATEGORY
-  // =========================================================
-
-  const groupedServices =
-    categories.map((category) => ({
-      ...category,
-
-      services: services.filter(
-        (service) =>
-          Number(service.categoryId) ===
-          Number(category.id)
-      ),
-    }));
+  // Grouping
+  const groupedServices = categories.map((category) => ({
+    ...category,
+    services: services.filter(
+      (service) => Number(service.categoryId) === Number(category.id)
+    ),
+  }));
 
   // =========================================================
-  // LOADING
+  // RENDER CONDITIONAL (LOADING / DENIED)
   // =========================================================
-
   if (loading) {
     return (
       <div className="min-h-[400px] flex items-center justify-center bg-white">
         <div className="text-center">
-
           <div className="w-10 h-10 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin mx-auto mb-4"></div>
-
-          <p className="text-slate-500 text-xs font-medium">
-            Memuat data layanan...
-          </p>
-
+          <p className="text-slate-500 text-xs font-medium">Memuat data layanan...</p>
         </div>
       </div>
     );
   }
-
-  // =========================================================
-  // ACCESS DENIED
-  // =========================================================
 
   if (!hasAccess) {
     return (
       <div className="p-6 bg-white min-h-screen">
-
         <div className="bg-white border border-rose-200 rounded-2xl p-10 text-center shadow-sm">
-
-          <div className="text-5xl mb-4">
-            🔒
-          </div>
-
-          <h2 className="text-xl font-bold text-slate-800">
-            Akses Ditolak
-          </h2>
-
+          <div className="text-5xl mb-4">🔒</div>
+          <h2 className="text-xl font-bold text-slate-800">Akses Ditolak</h2>
           <p className="text-slate-500 mt-2 text-xs">
-            Anda tidak memiliki izin untuk
-            mengakses halaman layanan.
+            Anda tidak memiliki izin untuk mengakses halaman layanan.
           </p>
-
-          {user?.role && (
-            <p className="text-xs text-slate-400 mt-3 font-mono">
-              Role Anda: {user.role}
-            </p>
-          )}
-
         </div>
-
       </div>
     );
   }
 
-  // =========================================================
-  // RENDER (DENGAN TAMPILAN WHITE BACKGROUND & SKY BLUE HEADER)
-  // =========================================================
-
   return (
     <div className="w-full min-h-screen bg-white p-6 lg:p-8 space-y-6 text-slate-800">
-
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
-
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-500/15 text-white">
-
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white">
         <div>
-
-          <h1 className="text-2xl font-black tracking-tight">
-            Layanan
-          </h1>
-
+          <h1 className="text-2xl font-black tracking-tight">Daftar Layanan</h1>
           <p className="text-sky-100 text-xs font-medium mt-1">
-            Kelola kategori, layanan, dan harga laundry
+            Kelola kategori, paket layanan, dan daftar harga laundry
           </p>
-
         </div>
 
-        <div className="flex flex-wrap gap-2.5">
-
-          {/* TAMBAH KATEGORI */}
-
-          <button
-            type="button"
-            onClick={
-              handleOpenCategoryModal
-            }
-            className="bg-white text-sky-600 hover:bg-sky-50 font-bold px-4 py-2.5 rounded-xl shadow-sm transition duration-200 text-xs flex items-center justify-center gap-1.5"
-          >
-            + Kategori
-          </button>
-
-          {/* TAMBAH LAYANAN */}
-
-          <button
-            type="button"
-            onClick={
-              handleOpenCreateService
-            }
-            disabled={
-              categories.length === 0
-            }
-            className={`px-4 py-2.5 font-bold rounded-xl text-xs transition shadow-sm ${categories.length === 0
-                ? "bg-sky-300 text-white/80 cursor-not-allowed"
-                : "bg-white hover:bg-sky-800 text-sky-600"
-              }`}
-          >
-            + Layanan
-          </button>
-
-        </div>
-
+        {/* Tombol Aksi HANYA MUNCUL untuk Admin & Owner */}
+        {canModify && (
+          <div className="flex flex-wrap gap-2.5">
+            <button
+              type="button"
+              onClick={handleOpenCategoryModal}
+              className="bg-white text-sky-600 hover:bg-sky-50 font-bold px-4 py-2.5 rounded-xl shadow-sm text-xs"
+            >
+              + Kategori
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenCreateService}
+              disabled={categories.length === 0}
+              className={`px-4 py-2.5 font-bold rounded-xl text-xs shadow-sm ${categories.length === 0
+                  ? "bg-sky-300 text-white cursor-not-allowed"
+                  : "bg-white hover:bg-sky-50 text-sky-600"
+                }`}
+            >
+              + Layanan
+            </button>
+          </div>
+        )}
       </div>
-
-      {/* =====================================================
-          ERROR
-      ===================================================== */}
 
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex justify-between items-center gap-4 text-xs font-medium shadow-sm">
-
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex justify-between items-center text-xs font-medium">
           <span>{error}</span>
-
-          <button
-            type="button"
-            onClick={loadData}
-            className="text-xs bg-rose-100 hover:bg-rose-200 text-rose-800 font-semibold px-3 py-1.5 rounded-lg transition"
-          >
+          <button onClick={loadData} className="bg-rose-100 px-3 py-1.5 rounded-lg font-bold">
             Coba lagi
           </button>
-
         </div>
       )}
 
-      {/* =====================================================
-          SUMMARY
-      ===================================================== */}
-
+      {/* RINGKASAN */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Total Kategori
-          </p>
-
-          <p className="text-3xl font-black text-slate-800 mt-2">
-            {categories.length}
-          </p>
-
+          <p className="text-[11px] font-bold uppercase text-slate-400">Total Kategori</p>
+          <p className="text-3xl font-black text-slate-800 mt-2">{categories.length}</p>
         </div>
-
         <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Total Layanan
-          </p>
-
-          <p className="text-3xl font-black text-sky-600 mt-2">
-            {services.length}
-          </p>
-
+          <p className="text-[11px] font-bold uppercase text-slate-400">Total Layanan</p>
+          <p className="text-3xl font-black text-sky-600 mt-2">{services.length}</p>
         </div>
-
       </div>
 
-      {/* =====================================================
-          EMPTY CATEGORY
-      ===================================================== */}
+      {/* DAFTAR LAYANAN DENGAN KATEGORI */}
+      <div className="space-y-8">
+        {groupedServices.map((category) => (
+          <section key={category.id} className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-black text-slate-800">{category.name}</h2>
+                <p className="text-xs font-semibold text-sky-600 mt-0.5">
+                  {category.services.length} layanan
+                </p>
+              </div>
 
-      {categories.length === 0 ? (
-
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-10 text-center shadow-sm">
-
-          <div className="text-4xl mb-4">
-            🧺
-          </div>
-
-          <h2 className="text-base font-bold text-slate-800">
-            Belum ada kategori
-          </h2>
-
-          <p className="text-slate-400 text-xs mt-1 mb-5">
-            Tambahkan kategori layanan laundry terlebih dahulu.
-          </p>
-
-          <button
-            type="button"
-            onClick={
-              handleOpenCategoryModal
-            }
-            className="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm"
-          >
-            + Tambah Kategori
-          </button>
-
-        </div>
-
-      ) : (
-
-        /* =====================================================
-            CATEGORY LIST
-        ===================================================== */
-
-        <div className="space-y-8">
-
-          {groupedServices.map(
-            (category) => (
-
-              <section
-                key={category.id}
-                className="space-y-4"
-              >
-
-                {/* CATEGORY HEADER */}
-
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-
-                  <div>
-
-                    <h2 className="text-xl font-black text-slate-800">
-                      {category.name}
-                    </h2>
-
-                    <p className="text-xs font-semibold text-sky-600 mt-0.5">
-                      {category.services.length}{" "}
-                      layanan
-                    </p>
-
-                  </div>
-
-                  <div className="flex items-center gap-2">
-
-                    {/* TAMBAH SERVICE */}
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleOpenCreateServiceForCategory(
-                          category.id
-                        )
-                      }
-                      className="px-3 py-1.5 text-xs font-bold rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 transition"
-                    >
-                      + Layanan
-                    </button>
-
-                    {/* HAPUS CATEGORY */}
-
-                    <button
-                      type="button"
-                      disabled={
-                        category.services.length >
-                        0
-                      }
-                      onClick={() =>
-                        handleDeleteCategory(
-                          category
-                        )
-                      }
-                      className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition ${category.services
-                          .length > 0
-                          ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                          : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
-                        }`}
-                    >
-                      {category.services
-                        .length > 0
-                        ? "Hapus Layanan Dahulu"
-                        : "Hapus Kategori"}
-                    </button>
-
-                  </div>
-
+              {canModify && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenCreateServiceForCategory(category.id)}
+                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-sky-50 text-sky-700 border border-sky-200"
+                  >
+                    + Layanan
+                  </button>
+                  <button
+                    type="button"
+                    disabled={category.services.length > 0}
+                    onClick={() => handleDeleteCategory(category)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-xl border ${category.services.length > 0
+                        ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                        : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                      }`}
+                  >
+                    Hapus Kategori
+                  </button>
                 </div>
+              )}
+            </div>
 
-                {/* =====================================================
-                    NO SERVICE
-                ===================================================== */}
+            {category.services.length === 0 ? (
+              <div className="bg-sky-50/30 border border-dashed border-sky-200 rounded-2xl p-6 text-center text-xs text-slate-400">
+                Belum ada layanan pada kategori ini.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {category.services.map((service) => (
+                  <div
+                    key={service.id}
+                    className="w-full bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm"
+                  >
+                    <div className="p-6 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                      <div>
+                        <h3 className="text-base font-extrabold text-slate-800">{service.name}</h3>
+                        {service.description && (
+                          <p className="text-xs text-slate-500 mt-1">{service.description}</p>
+                        )}
+                      </div>
 
-                {category.services.length === 0 ? (
-
-                  <div className="bg-sky-50/30 border border-dashed border-sky-200 rounded-2xl p-6">
-
-                    <div className="text-center">
-
-                      <p className="text-slate-400 text-xs">
-                        Belum ada layanan pada kategori ini.
-                      </p>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleOpenCreateServiceForCategory(
-                            category.id
-                          )
-                        }
-                        className="text-xs text-sky-600 font-bold hover:text-sky-800 mt-2 inline-block"
-                      >
-                        + Tambah layanan
-                      </button>
-
+                      {canModify && (
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => handleOpenEditService(service)}
+                            className="bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold px-2.5 py-1.5 rounded-lg"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteService(service)}
+                            className="bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold px-2.5 py-1.5 rounded-lg"
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      )}
                     </div>
 
-                  </div>
+                    {/* HARGA */}
+                    <div className="border-t border-slate-100 bg-sky-50/20 p-6">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-xs font-bold text-slate-700 uppercase">Daftar Harga</h4>
+                        {canModify && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCreatePrice(service.id)}
+                            className="text-xs font-bold text-sky-600 hover:underline"
+                          >
+                            + Tambah Harga
+                          </button>
+                        )}
+                      </div>
 
-                ) : (
-
-                  /* =====================================================
-                      SERVICE LIST FULL WIDTH
-                  ===================================================== */
-
-                  <div className="space-y-4">
-
-                    {category.services.map(
-                      (service) => (
-
-                        <div
-                          key={service.id}
-                          className="w-full bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm hover:border-sky-200 transition"
-                        >
-
-                          {/* =================================================
-                              SERVICE HEADER
-                          ================================================= */}
-
-                          <div className="p-6">
-
-                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-
-                              <div className="min-w-0 flex-1">
-
-                                <h3 className="text-base font-extrabold text-slate-800">
-                                  {service.name}
-                                </h3>
-
-                                {service.description && (
-                                  <p className="text-xs text-slate-500 mt-1">
-                                    {
-                                      service.description
-                                    }
-                                  </p>
-                                )}
-
-                              </div>
-
-                              {/* SERVICE ACTION */}
-
-                              <div className="flex gap-1.5 shrink-0">
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleOpenEditService(
-                                      service
-                                    )
-                                  }
-                                  className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
-                                >
-                                  Edit
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleDeleteService(
-                                      service
-                                    )
-                                  }
-                                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2.5 py-1.5 rounded-lg transition"
-                                >
-                                  Hapus
-                                </button>
-
-                              </div>
-
-                            </div>
-
-                          </div>
-
-                          {/* =================================================
-                              PRICE SECTION
-                          ================================================= */}
-
-                          <div className="border-t border-slate-100 bg-sky-50/20 p-6">
-
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-
-                              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                Daftar Harga
-                              </h4>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleOpenCreatePrice(
-                                    service.id
-                                  )
-                                }
-                                className="text-xs font-bold text-sky-600 hover:text-sky-800"
-                              >
-                                + Tambah Harga
-                              </button>
-
-                            </div>
-
-                            {/* =================================================
-                                PRICE LIST
-                            ================================================= */}
-
-                            {service.prices &&
-                              service.prices.length >
-                              0 ? (
-
-                              <div className="w-full overflow-x-auto">
-
-                                <div className="min-w-[500px]">
-
-                                  {/* PRICE HEADER */}
-
-                                  <div className="grid grid-cols-[1fr_1fr_120px] gap-4 px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-
-                                    <div>
-                                      Jenis Item
-                                    </div>
-
-                                    <div>
-                                      Harga
-                                    </div>
-
-                                    <div className="text-center">
-                                      Aksi
-                                    </div>
-
-                                  </div>
-
-                                  {/* PRICE ROW */}
-
-                                  <div className="space-y-2">
-
-                                    {service.prices.map(
-                                      (price) => (
-
-                                        <div
-                                          key={
-                                            price.id
-                                          }
-                                          className="grid grid-cols-[1fr_1fr_120px] gap-4 items-center bg-white border border-slate-200/60 rounded-xl px-4 py-3"
-                                        >
-
-                                          {/* ITEM */}
-
-                                          <div className="min-w-0">
-
-                                            <p className="text-xs font-bold text-slate-800 truncate">
-                                              {
-                                                price.itemType
-                                              }
-                                            </p>
-
-                                          </div>
-
-                                          {/* PRICE */}
-
-                                          <div>
-
-                                            <p className="text-xs font-bold text-slate-800 font-mono">
-                                              Rp{" "}
-                                              {Number(
-                                                price.price
-                                              ).toLocaleString(
-                                                "id-ID"
-                                              )}
-                                              {" / "}
-                                              {
-                                                price.unit
-                                              }
-                                            </p>
-
-                                          </div>
-
-                                          {/* ACTION */}
-
-                                          <div className="flex justify-center items-center gap-1.5">
-
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                handleOpenEditPrice(
-                                                  price
-                                                )
-                                              }
-                                              className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-2 py-1 rounded-lg transition"
-                                            >
-                                              Edit
-                                            </button>
-
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                handleDeletePrice(
-                                                  price
-                                                )
-                                              }
-                                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold px-2 py-1 rounded-lg transition"
-                                            >
-                                              Hapus
-                                            </button>
-
-                                          </div>
-
-                                        </div>
-
-                                      )
-                                    )}
-
-                                  </div>
-
+                      {service.prices && service.prices.length > 0 ? (
+                        <div className="space-y-2">
+                          {service.prices.map((price) => (
+                            <div
+                              key={price.id}
+                              className="flex justify-between items-center bg-white border border-slate-200/60 rounded-xl px-4 py-3 text-xs"
+                            >
+                              <span className="font-bold text-slate-800">{price.itemType}</span>
+                              <span className="font-mono font-bold text-sky-600">
+                                Rp {Number(price.price).toLocaleString("id-ID")} / {price.unit}
+                              </span>
+                              {canModify && (
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() => handleOpenEditPrice(price)}
+                                    className="text-amber-600 font-bold px-2"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeletePrice(price)}
+                                    className="text-rose-600 font-bold px-2"
+                                  >
+                                    Hapus
+                                  </button>
                                 </div>
-
-                              </div>
-
-                            ) : (
-
-                              <div className="py-6 text-center bg-white border border-dashed border-slate-200 rounded-xl">
-
-                                <p className="text-xs text-slate-400">
-                                  Belum ada harga.
-                                </p>
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleOpenCreatePrice(
-                                      service.id
-                                    )
-                                  }
-                                  className="text-xs text-sky-600 font-bold mt-1 hover:underline"
-                                >
-                                  Tambahkan harga
-                                </button>
-
-                              </div>
-
-                            )}
-
-                          </div>
-
+                              )}
+                            </div>
+                          ))}
                         </div>
-
-                      )
-                    )}
-
+                      ) : (
+                        <p className="text-xs text-slate-400 italic">Belum ada rincian harga.</p>
+                      )}
+                    </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </section>
+        ))}
+      </div>
 
-                )}
-
-              </section>
-
-            )
-          )}
-
-        </div>
-
-      )}
-
-      {/* =====================================================
-          MODAL KATEGORI
-      ===================================================== */}
-
+      {/* MODAL KATEGORI */}
       {showCategoryModal && (
-
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
-
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md overflow-hidden my-8">
-
-            <div className="bg-sky-500 text-white px-6 py-4 flex items-center justify-between">
-
-              <h2 className="text-base font-bold">
-                Tambah Kategori Baru
-              </h2>
-
-              <button
-                type="button"
-                onClick={
-                  handleCloseCategoryModal
-                }
-                className="text-white/80 hover:text-white font-bold text-xl leading-none"
-              >
-                &times;
-              </button>
-
-            </div>
-
-            <form
-              onSubmit={
-                handleCreateCategory
-              }
-              className="p-6 space-y-4"
-            >
-
-              <div>
-
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Nama Kategori
-                </label>
-
-                <input
-                  type="text"
-                  value={categoryName}
-                  onChange={(e) =>
-                    setCategoryName(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Contoh: Cuci Kering"
-                  maxLength={100}
-                  autoFocus
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
-                />
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-lg font-bold mb-4">Tambah Kategori</h3>
+            <form onSubmit={handleCreateCategory} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Nama Kategori"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                className="w-full border p-2.5 rounded-xl text-xs"
+                required
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={handleCloseCategoryModal} className="px-4 py-2 border rounded-xl text-xs font-bold">Batal</button>
+                <button type="submit" className="bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Simpan</button>
               </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-
-                <button
-                  type="button"
-                  onClick={
-                    handleCloseCategoryModal
-                  }
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
-                >
-                  Batal
-                </button>
-
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm"
-                >
-                  Simpan Kategori
-                </button>
-
-              </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
 
-      {/* =====================================================
-          MODAL LAYANAN
-      ===================================================== */}
-
+      {/* MODAL LAYANAN */}
       {showServiceModal && (
-
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
-
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md overflow-hidden my-8">
-
-            <div className="bg-sky-500 text-white px-6 py-4 flex items-center justify-between">
-
-              <h2 className="text-base font-bold">
-                {editingService
-                  ? "Edit Layanan"
-                  : "Tambah Layanan Baru"}
-              </h2>
-
-              <button
-                type="button"
-                onClick={
-                  handleCloseServiceModal
-                }
-                className="text-white/80 hover:text-white font-bold text-xl leading-none"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-lg font-bold mb-4">{editingService ? "Edit Layanan" : "Tambah Layanan"}</h3>
+            <form onSubmit={handleSubmitService} className="space-y-4">
+              <select
+                value={serviceForm.categoryId}
+                onChange={(e) => setServiceForm({ ...serviceForm, categoryId: e.target.value })}
+                className="w-full border p-2.5 rounded-xl text-xs"
+                required
               >
-                &times;
-              </button>
-
-            </div>
-
-            <form
-              onSubmit={
-                handleSubmitService
-              }
-              className="p-6 space-y-4"
-            >
-
-              {/* CATEGORY */}
-
-              <div>
-
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Kategori
-                </label>
-
-                <select
-                  name="categoryId"
-                  value={
-                    serviceForm.categoryId
-                  }
-                  onChange={
-                    handleServiceFormChange
-                  }
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
-                >
-
-                  <option value="">
-                    -- Pilih Kategori --
-                  </option>
-
-                  {categories.map(
-                    (category) => (
-                      <option
-                        key={
-                          category.id
-                        }
-                        value={
-                          category.id
-                        }
-                      >
-                        {
-                          category.name
-                        }
-                      </option>
-                    )
-                  )}
-
-                </select>
-
+                <option value="">Pilih Kategori</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Nama Layanan"
+                value={serviceForm.name}
+                onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
+                className="w-full border p-2.5 rounded-xl text-xs"
+                required
+              />
+              <textarea
+                placeholder="Deskripsi (Opsional)"
+                value={serviceForm.description}
+                onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+                className="w-full border p-2.5 rounded-xl text-xs"
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={handleCloseServiceModal} className="px-4 py-2 border rounded-xl text-xs font-bold">Batal</button>
+                <button type="submit" className="bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Simpan</button>
               </div>
-
-              {/* NAME */}
-
-              <div>
-
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Nama Layanan
-                </label>
-
-                <input
-                  type="text"
-                  name="name"
-                  value={
-                    serviceForm.name
-                  }
-                  onChange={
-                    handleServiceFormChange
-                  }
-                  placeholder="Contoh: Cuci Kiloan"
-                  maxLength={100}
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
-                />
-
-              </div>
-
-              {/* DESCRIPTION */}
-
-              <div>
-
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Deskripsi (Opsional)
-                </label>
-
-                <textarea
-                  name="description"
-                  value={
-                    serviceForm.description
-                  }
-                  onChange={
-                    handleServiceFormChange
-                  }
-                  placeholder="Deskripsi singkat mengenai layanan..."
-                  rows={3}
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition resize-none"
-                />
-
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-
-                <button
-                  type="button"
-                  onClick={
-                    handleCloseServiceModal
-                  }
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
-                >
-                  Batal
-                </button>
-
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm"
-                >
-                  {editingService
-                    ? "Update Layanan"
-                    : "Simpan Layanan"}
-                </button>
-
-              </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
 
-      {/* =====================================================
-          MODAL HARGA
-      ===================================================== */}
-
+      {/* MODAL HARGA */}
       {showPriceModal && (
-
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
-
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md overflow-hidden my-8">
-
-            <div className="bg-sky-500 text-white px-6 py-4 flex items-center justify-between">
-
-              <h2 className="text-base font-bold">
-                {editingPrice
-                  ? "Edit Harga"
-                  : "Tambah Harga Baru"}
-              </h2>
-
-              <button
-                type="button"
-                onClick={
-                  handleClosePriceModal
-                }
-                className="text-white/80 hover:text-white font-bold text-xl leading-none"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-lg font-bold mb-4">{editingPrice ? "Edit Harga" : "Tambah Harga"}</h3>
+            <form onSubmit={handleSubmitPrice} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Jenis Item (cth: Pakaian / Selimut)"
+                value={priceForm.itemType}
+                onChange={(e) => setPriceForm({ ...priceForm, itemType: e.target.value })}
+                className="w-full border p-2.5 rounded-xl text-xs"
+                required
+              />
+              <input
+                type="number"
+                placeholder="Harga (Rp)"
+                value={priceForm.price}
+                onChange={(e) => setPriceForm({ ...priceForm, price: e.target.value })}
+                className="w-full border p-2.5 rounded-xl text-xs"
+                required
+              />
+              <select
+                value={priceForm.unit}
+                onChange={(e) => setPriceForm({ ...priceForm, unit: e.target.value })}
+                className="w-full border p-2.5 rounded-xl text-xs"
               >
-                &times;
-              </button>
-
-            </div>
-
-            <form
-              onSubmit={
-                handleSubmitPrice
-              }
-              className="p-6 space-y-4"
-            >
-
-              {/* SERVICE */}
-
-              <div>
-
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Layanan
-                </label>
-
-                <select
-                  name="serviceId"
-                  value={
-                    priceForm.serviceId
-                  }
-                  onChange={
-                    handlePriceFormChange
-                  }
-                  disabled={
-                    Boolean(editingPrice)
-                  }
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition disabled:bg-slate-100 disabled:text-slate-500"
-                >
-
-                  <option value="">
-                    -- Pilih Layanan --
-                  </option>
-
-                  {services.map(
-                    (service) => (
-                      <option
-                        key={
-                          service.id
-                        }
-                        value={
-                          service.id
-                        }
-                      >
-                        {
-                          service.name
-                        }
-                      </option>
-                    )
-                  )}
-
-                </select>
-
+                <option value="kg">kg</option>
+                <option value="pcs">pcs</option>
+              </select>
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={handleClosePriceModal} className="px-4 py-2 border rounded-xl text-xs font-bold">Batal</button>
+                <button type="submit" className="bg-sky-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Simpan</button>
               </div>
-
-              {/* ITEM TYPE */}
-
-              <div>
-
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Jenis Item
-                </label>
-
-                <input
-                  type="text"
-                  name="itemType"
-                  value={
-                    priceForm.itemType
-                  }
-                  onChange={
-                    handlePriceFormChange
-                  }
-                  placeholder="Contoh: Pakaian, Bed Cover, Selimut"
-                  maxLength={100}
-                  className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
-                />
-
-              </div>
-
-              {/* PRICE & UNIT */}
-
-              <div className="grid grid-cols-2 gap-3">
-
-                <div>
-
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Harga (Rp)
-                  </label>
-
-                  <div className="relative">
-
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">
-                      Rp
-                    </span>
-
-                    <input
-                      type="number"
-                      name="price"
-                      value={
-                        priceForm.price
-                      }
-                      onChange={
-                        handlePriceFormChange
-                      }
-                      placeholder="7000"
-                      min="0"
-                      step="1"
-                      className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
-                    />
-
-                  </div>
-
-                </div>
-
-                <div>
-
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Satuan Unit
-                  </label>
-
-                  <select
-                    name="unit"
-                    value={
-                      priceForm.unit
-                    }
-                    onChange={
-                      handlePriceFormChange
-                    }
-                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
-                  >
-
-                    <option value="kg">
-                      kg (Kilogram)
-                    </option>
-
-                    <option value="pcs">
-                      pcs (Satuan)
-                    </option>
-
-                  </select>
-
-                </div>
-
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-
-                <button
-                  type="button"
-                  onClick={
-                    handleClosePriceModal
-                  }
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
-                >
-                  Batal
-                </button>
-
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm"
-                >
-                  {editingPrice
-                    ? "Update Harga"
-                    : "Simpan Harga"}
-                </button>
-
-              </div>
-
             </form>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 }
