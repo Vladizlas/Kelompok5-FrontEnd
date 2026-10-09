@@ -11,6 +11,7 @@ import Customer from "./pages/Customer";
 import Pengeluaran from "./pages/Pengeluaran";
 import Home from "./pages/Home";
 import PesanOnline from "./pages/PesanOnline";
+import Report from "./pages/Laporan";
 
 function App() {
   return (
