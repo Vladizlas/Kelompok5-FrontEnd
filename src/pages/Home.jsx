@@ -93,11 +93,7 @@ function Home() {
               FAQ
             </a>
           </li>
-          <li>
-            <a href="#kontak" className="hover:text-sky-500 transition">
-              Kontak
-            </a>
-          </li>
+
         </ul>
 
         <div className="flex items-center gap-2">

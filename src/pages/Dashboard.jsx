@@ -19,6 +19,11 @@ function Dashboard() {
   const [error, setError] = useState("");
 
   // =========================================================
+  // STATE UNTUK MODAL INVOICE (DITAMBAHKAN)
+  // =========================================================
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
+
+  // =========================================================
   // FETCH ALL DATA
   // =========================================================
   const fetchData = async () => {
@@ -100,6 +105,13 @@ function Dashboard() {
   };
 
   // =========================================================
+  // HANDLER POPUP / PRINT INVOICE
+  // =========================================================
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // =========================================================
   // RENDER LOADING & ERROR
   // =========================================================
   if (loading) {
@@ -133,13 +145,15 @@ function Dashboard() {
   return (
     <div className="w-full min-h-screen space-y-6 bg-white p-6 lg:p-8 text-slate-800">
       {/* HEADER GREETING */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-500/15 text-white">
       <div>
-        <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-          Halo, Admin <span className="animate-bounce">👋</span>
+        <h1 className="text-2xl font-black text-white flex items-center gap-2">
+          Dashboard
         </h1>
-        <p className="text-sky-600 text-xs font-semibold mt-0.5">
+        <p className="text-white text-xs font-semibold mt-0.5">
           Ringkasan operasional laundry hari ini
         </p>
+      </div>
       </div>
 
       {/* SECTION 1: STATISTIK OMZET & TOTAL TRANSAKSI */}
@@ -280,13 +294,14 @@ function Dashboard() {
                 <th className="py-3 px-3">Pelanggan</th>
                 <th className="py-3 px-3">Total Harga</th>
                 <th className="py-3 px-3">Status</th>
+                <th className="py-3 px-3 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {recentOrders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="6"
                     className="text-center py-6 text-xs text-slate-400"
                   >
                     Belum ada pesanan terbaru.
@@ -298,11 +313,20 @@ function Dashboard() {
                     key={order.id}
                     className="hover:bg-sky-50/30 transition duration-150"
                   >
+                    {/* NOMOR INVOICE BISA DIKLIK */}
                     <td className="py-3.5 px-3 font-mono text-sky-600 font-bold text-xs">
-                      INV-{String(order.id).padStart(4, "0")}
+                      <button
+                        type="button"
+                        onClick={() => setInvoiceOrder(order)}
+                        className="hover:underline focus:outline-none cursor-pointer"
+                      >
+                        INV-{String(order.id).padStart(4, "0")}
+                      </button>
                     </td>
                     <td className="py-3.5 px-3 text-xs text-slate-500 font-medium whitespace-nowrap">
-                      {formatDate(order.createdAt || order.orderDate || order.created_at)}
+                      {formatDate(
+                        order.createdAt || order.orderDate || order.created_at
+                      )}
                     </td>
                     <td className="py-3.5 px-3 font-semibold text-slate-800">
                       {order.customer?.name || order.customerName || "-"}
@@ -322,6 +346,17 @@ function Dashboard() {
                         {order.status}
                       </span>
                     </td>
+                    {/* TOMBOL INVOICE BISA DIKLIK */}
+                    <td className="py-3.5 px-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setInvoiceOrder(order)}
+                        className="bg-sky-50 hover:bg-sky-100 active:scale-95 text-sky-700 border border-sky-200 text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer"
+                        title="Cetak Invoice"
+                      >
+                        Invoice
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -329,6 +364,140 @@ function Dashboard() {
           </table>
         </div>
       </div>
+
+      {/* ========================================================= */}
+      {/* MODAL INVOICE POPUP (DITAMBAHKAN)                         */}
+      {/* ========================================================= */}
+      {invoiceOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden text-slate-800 my-8">
+            {/* Header Modal */}
+            <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-5 text-white flex justify-between items-center print:hidden">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-base">Struk Invoice</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInvoiceOrder(null)}
+                className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg text-xs font-bold transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Isi Struk Cetak */}
+            <div className="p-6 space-y-4 text-xs font-mono">
+              <div className="text-center border-b border-slate-200 pb-3">
+                <h2 className="text-base font-black font-sans text-sky-600 tracking-wide uppercase">
+                  Fanara Laundry
+                </h2>
+                <p className="text-[10px] text-slate-500 font-sans mt-0.5">
+                  Layanan Cuci & Setrika Bersih Wangi
+                </p>
+              </div>
+
+              <div className="space-y-1 text-slate-600">
+                <div className="flex justify-between">
+                  <span>No. Invoice:</span>
+                  <span className="font-bold text-slate-800">
+                    INV-{String(invoiceOrder.id).padStart(4, "0")}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tanggal:</span>
+                  <span>
+                    {formatDate(
+                      invoiceOrder.createdAt ||
+                      invoiceOrder.orderDate ||
+                      invoiceOrder.created_at
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Pelanggan:</span>
+                  <span className="font-bold text-slate-800">
+                    {invoiceOrder.customer?.name ||
+                      invoiceOrder.customerName ||
+                      "-"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Status:</span>
+                  <span className="capitalize font-bold text-sky-600">
+                    {invoiceOrder.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Rincian Item Pesanan */}
+              <div className="border-t border-b border-slate-200 py-3 space-y-2">
+                <p className="font-bold text-slate-700 font-sans text-[11px]">
+                  Rincian Item:
+                </p>
+                {invoiceOrder.items && invoiceOrder.items.length > 0 ? (
+                  invoiceOrder.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-[11px]">
+                      <span>
+                        {item.serviceName || item.service?.name || "Layanan"}{" "}
+                        x{item.qty || item.quantity || 1}
+                      </span>
+                      <span>
+                        Rp{" "}
+                        {Number(
+                          item.price || item.subtotal || 0
+                        ).toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-between text-[11px]">
+                    <span>Paket Laundry</span>
+                    <span>
+                      Rp{" "}
+                      {Number(
+                        invoiceOrder.totalPrice || invoiceOrder.total_price || 0
+                      ).toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Total Harga */}
+              <div className="flex justify-between items-center text-sm font-bold font-sans pt-1">
+                <span>TOTAL BAYAR</span>
+                <span className="text-sky-600">
+                  Rp{" "}
+                  {Number(
+                    invoiceOrder.totalPrice || invoiceOrder.total_price || 0
+                  ).toLocaleString("id-ID")}
+                </span>
+              </div>
+
+              <div className="text-center text-[10px] text-slate-400 font-sans pt-3 border-t border-slate-100">
+                Terima kasih atas kepercayaan Anda!
+              </div>
+            </div>
+
+            {/* Opsi Action Modal */}
+            <div className="bg-slate-50 p-4 border-t border-slate-100 flex justify-end gap-2 print:hidden">
+              <button
+                type="button"
+                onClick={() => setInvoiceOrder(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100 transition"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md transition"
+              >
+                Cetak Struk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

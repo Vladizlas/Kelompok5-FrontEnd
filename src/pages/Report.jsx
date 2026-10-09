@@ -185,12 +185,12 @@ function Report() {
     return (
         <div className="p-6 md:p-8 space-y-6 bg-[#f4f8fb] min-h-screen text-slate-800 font-sans">
             {/* HEADER & FILTER */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-sky-100 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl border border-sky-100 shadow-xs">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    <h1 className="text-2xl font-extrabold text-white tracking-tight">
                         Laporan Keuangan
                     </h1>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-white mt-1">
                         Ringkasan pemasukan, pengeluaran, dan laba bersih
                     </p>
                 </div>
@@ -200,7 +200,7 @@ function Report() {
                     <select
                         value={filterMode}
                         onChange={(e) => setFilterMode(e.target.value)}
-                        className="px-3 py-2 rounded-xl border border-sky-200 bg-sky-50/50 text-slate-700 font-semibold text-sm focus:outline-none focus:border-sky-500 transition"
+                        className="px-3 py-2 rounded-xl border border-sky-200 bg-white text-slate-700 font-semibold text-sm focus:outline-none focus:border-sky-500 transition"
                     >
                         <option value="daily">Harian</option>
                         <option value="weekly">Mingguan</option>

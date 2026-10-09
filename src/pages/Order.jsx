@@ -814,106 +814,109 @@ function Order() {
 
       {/* MODAL INVOICE PRINTABLE */}
       {invoiceOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden my-6 print:m-0 print:shadow-none print:w-full print:max-w-none print:border-none">
-            {/* INVOICE HEADER BAR */}
-            <div className="bg-sky-500 text-white p-4 flex items-center justify-between print:hidden">
-              <span className="font-bold text-xs uppercase tracking-wider">Preview Invoice</span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handlePrintInvoice}
-                  className="bg-white text-sky-600 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm"
-                >
-                  🖨️ Cetak / PDF
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setInvoiceOrder(null)}
-                  className="text-white/80 hover:text-white font-bold text-xl leading-none px-2"
-                >
-                  &times;
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden text-slate-800 my-8">
+            {/* Header Modal */}
+            <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-5 text-white flex justify-between items-center print:hidden">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-base">Struk Invoice</span>
               </div>
+              <button
+                type="button"
+                onClick={() => setInvoiceOrder(null)}
+                className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg text-xs font-bold transition"
+              >
+                ✕
+              </button>
             </div>
 
-            {/* INVOICE CONTENT */}
-            <div className="p-8 space-y-6">
-              <div className="flex justify-between items-start border-b border-slate-100 pb-4">
-                <div>
-                  <h2 className="text-xl font-black text-sky-600 tracking-tight">LAUNDRY SERVICE</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Nota Transaksi Pelanggan</p>
-                </div>
-                <div className="text-right">
-                  <span className="font-mono text-lg font-black text-sky-700">
-                    {invoiceNo(invoiceOrder.id)}
+            {/* Isi Struk Cetak */}
+            <div className="p-6 space-y-4 text-xs font-mono">
+              <div className="text-center border-b border-slate-200 pb-3">
+                <h2 className="text-base font-black font-sans text-sky-600 tracking-wide uppercase">
+                  Fanara Laundry
+                </h2>
+                <p className="text-[10px] text-slate-500 font-sans mt-0.5">
+                  Layanan Cuci & Setrika Bersih Wangi
+                </p>
+              </div>
+
+              <div className="space-y-1 text-slate-600">
+                <div className="flex justify-between">
+                  <span>No. Invoice:</span>
+                  <span className="font-bold text-slate-800">
+                    INV-{String(invoiceOrder.id).padStart(4, "0")}
                   </span>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {formatDate(invoiceOrder.createdAt || invoiceOrder.orderDate || invoiceOrder.created_at)}
-                  </p>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tanggal:</span>
+                  <span>
+                    {formatDate(
+                      invoiceOrder.createdAt ||
+                      invoiceOrder.orderDate ||
+                      invoiceOrder.created_at
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Pelanggan:</span>
+                  <span className="font-bold text-slate-800">
+                    {invoiceOrder.customer?.name ||
+                      invoiceOrder.customerName ||
+                      "-"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Status:</span>
+                  <span className="capitalize font-bold text-sky-600">
+                    {invoiceOrder.status}
+                  </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-sky-50/40 p-4 rounded-xl border border-sky-100 text-xs">
-                <div>
-                  <span className="text-slate-400 font-medium block mb-1">Pelanggan:</span>
-                  <p className="font-bold text-slate-800 text-sm">
-                    {invoiceOrder.customer?.name || "-"}
-                  </p>
-                  <p className="text-slate-500 mt-0.5">{invoiceOrder.customer?.phone || ""}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 font-medium block mb-1">Pembayaran:</span>
-                  <p className="font-bold text-slate-800 uppercase text-sm">
-                    {invoiceOrder.paymentMethod}
-                  </p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-sky-100 text-sky-800">
-                    Status: {invoiceOrder.status}
-                  </span>
-                </div>
+              {/* Rincian Item Pesanan */}
+              <div className="border-t border-b border-slate-200 py-3 space-y-2">
+                <p className="font-bold text-slate-700 font-sans text-[11px]">
+                  Rincian Item:
+                </p>
+                {invoiceOrder.items && invoiceOrder.items.length > 0 ? (
+                  invoiceOrder.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-[11px]">
+                      <span>
+                        {item.serviceName || item.service?.name || "Layanan"}{" "}
+                        x{item.qty || item.quantity || 1}
+                      </span>
+                      <span>
+                        Rp{" "}
+                        {Number(
+                          item.price || item.subtotal || 0
+                        ).toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-between text-[11px]">
+                    <span>Paket Laundry</span>
+                    <span>
+                      Rp{" "}
+                      {Number(
+                        invoiceOrder.totalPrice || invoiceOrder.total_price || 0
+                      ).toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider font-bold text-[10px]">
-                    <th className="pb-2">Layanan</th>
-                    <th className="pb-2 text-center">Qty / Berat</th>
-                    <th className="pb-2 text-right">Harga Satuan</th>
-                    <th className="pb-2 text-right">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {(invoiceOrder.items || []).map((item, idx) => (
-                    <tr key={item.id || idx}>
-                      <td className="py-3">
-                        <div className="font-bold text-slate-800">
-                          {item.service?.name || "-"}
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          {item.category?.name || "-"} &bull; {item.servicePrice?.itemType || "-"}
-                        </div>
-                      </td>
-                      <td className="py-3 text-center font-semibold text-slate-700">
-                        {Number(item.quantity)} {item.unit}
-                      </td>
-                      <td className="py-3 text-right text-slate-600 font-mono">
-                        {rupiah(item.pricePerUnit)}
-                      </td>
-                      <td className="py-3 text-right font-bold text-sky-700 font-mono">
-                        {rupiah(item.subtotal)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="border-t border-slate-100 pt-4 flex justify-between items-center">
-                <span className="font-bold text-slate-700 text-xs uppercase tracking-wider">Total Tagihan</span>
-                <span className="text-xl font-black text-sky-600 font-mono">
-                  {rupiah(invoiceOrder.totalPrice)}
+              {/* Total Harga */}
+              <div className="flex justify-between items-center text-sm font-bold font-sans pt-1">
+                <span>TOTAL BAYAR</span>
+                <span className="text-sky-600">
+                  Rp{" "}
+                  {Number(
+                    invoiceOrder.totalPrice || invoiceOrder.total_price || 0
+                  ).toLocaleString("id-ID")}
                 </span>
               </div>
-
               <div className="text-center text-[11px] text-slate-400 border-t border-slate-100 pt-4 space-y-1">
                 <p>Terima kasih telah mempercayakan pakaian Anda kepada kami!</p>
                 <p>Simpan nota ini sebagai bukti pengambilan barang.</p>
