@@ -2,7 +2,10 @@ import { useState } from "react";
 
 // Nomor WhatsApp laundry: format internasional TANPA tanda + dan spasi
 // (contoh: 6281234567890 untuk 0812-3456-7890). Ganti sesuai nomor outlet.
-const WA_NUMBER = "6281234567890";
+const WA_NUMBER = "6281268808101";
+
+// Alamat backend, sama dengan yang dipakai halaman Pesan Online
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const rupiah = (value) =>
   `Rp${Number(value || 0).toLocaleString("id-ID")}`;
@@ -28,6 +31,7 @@ const emptyForm = () => ({
 function WhatsAppOrderModal({ categories, services, loading, loadError, onClose }) {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   // =========================================================
   // TURUNAN PER ITEM (sama dengan form Order di admin)
@@ -147,11 +151,42 @@ function WhatsAppOrderModal({ categories, services, loading, loadError, onClose 
   };
 
   // =========================================================
-  // SUBMIT -> buka WhatsApp dengan pesan yang sudah terisi
+  // SIMPAN PESANAN KE BACKEND
+  // POST /api/pesan-online  (harga dihitung ulang di server)
   // =========================================================
 
-  const handleSubmit = (e) => {
+  const savePesananOnline = async () => {
+    const res = await fetch(`${API_URL}/pesan-online`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nama: form.nama.trim(),
+        pengambilan: form.pengambilan,
+        alamat: form.pengambilan === "jemput" ? form.alamat.trim() : "",
+        catatan: form.catatan.trim(),
+        items: form.items.map((item) => ({
+          servicePriceId: Number(item.servicePriceId),
+          quantity: Number(item.quantity),
+        })),
+      }),
+    });
+
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || `Server menjawab ${res.status}`);
+    }
+  };
+
+  // =========================================================
+  // SUBMIT -> simpan ke backend, lalu buka WhatsApp
+  // =========================================================
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (submitting) return;
+
+    setError("");
 
     if (!form.nama.trim()) return setError("Nama wajib diisi");
 
@@ -219,7 +254,29 @@ function WhatsAppOrderModal({ categories, services, loading, loadError, onClose 
       lines.join("\n")
     )}`;
 
-    window.open(url, "_blank", "noopener,noreferrer");
+    // Tab dibuka SEKARANG (sebelum await) supaya tidak diblokir browser.
+    // Alamat WhatsApp diisi setelah pesanan tersimpan.
+    const waWindow = window.open("", "_blank");
+
+    setSubmitting(true);
+
+    try {
+      await savePesananOnline();
+    } catch (err) {
+      // Pesanan tetap diteruskan lewat WhatsApp walau penyimpanan gagal,
+      // supaya pelanggan tidak terhambat.
+      console.error("Gagal menyimpan pesanan online:", err);
+    }
+
+    setSubmitting(false);
+
+    if (waWindow) {
+      waWindow.location.href = url;
+    } else {
+      // popup diblokir: pindah di tab yang sama
+      window.location.href = url;
+    }
+
     onClose();
   };
 
@@ -249,13 +306,7 @@ function WhatsAppOrderModal({ categories, services, loading, loadError, onClose 
             <span>Belum ada layanan yang tersedia.</span>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-            {error && (
-              <div role="alert" className="alert alert-error text-sm">
-                <span>{error}</span>
-              </div>
-            )}
-
+          <form onSubmit={handleSubmit} noValidate className="space-y-4 mt-4">
             <div>
               <label className="block text-sm font-medium mb-1">Nama</label>
 
@@ -493,13 +544,33 @@ function WhatsAppOrderModal({ categories, services, loading, loadError, onClose 
               />
             </div>
 
+            {/* ERROR: di atas tombol supaya langsung terlihat */}
+            {error && (
+              <div role="alert" className="alert alert-error text-sm">
+                <span>{error}</span>
+              </div>
+            )}
+
             <div className="modal-action">
-              <button type="button" onClick={onClose} className="btn">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={submitting}
+                className="btn"
+              >
                 Batal
               </button>
 
-              <button type="submit" className="btn btn-primary">
-                Lanjut ke WhatsApp
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn btn-primary"
+              >
+                {submitting ? (
+                  <span className="loading loading-spinner loading-sm"></span>
+                ) : (
+                  "Lanjut ke WhatsApp"
+                )}
               </button>
             </div>
           </form>
