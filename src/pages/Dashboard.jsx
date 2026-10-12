@@ -17,6 +17,27 @@ function Dashboard() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentUser, setCurrentUser] = useState({
+    name: "User",
+    role: "",
+  });
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+
+        setCurrentUser({
+          name: user.name || user.nama || "User",
+          role: user.role || "",
+        });
+      } catch (error) {
+        console.error("Gagal membaca data user:", error);
+      }
+    }
+  }, [])
 
   // =========================================================
   // STATE UNTUK MODAL INVOICE (DITAMBAHKAN)
@@ -146,14 +167,25 @@ function Dashboard() {
     <div className="w-full min-h-screen space-y-6 bg-white p-6 lg:p-8 text-slate-800">
       {/* HEADER GREETING */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-500/15 text-white">
-      <div>
-        <h1 className="text-2xl font-black text-white flex items-center gap-2">
-          Dashboard
-        </h1>
-        <p className="text-white text-xs font-semibold mt-0.5">
-          Ringkasan operasional laundry hari ini
-        </p>
-      </div>
+        <div>
+          <h1 className="text-2xl font-black text-white flex items-center gap-2">
+            Halo, {currentUser.name}!
+            <div className="animate-bounce">
+              👋
+            </div>
+          </h1>
+          <p className="text-">
+            {currentUser.role && (
+              <span className="capitalize">
+                {currentUser.role}
+              </span>
+            )}
+          </p>
+
+          <p className="text-white text-xs font-semibold mt-0.5">
+            Selamat datang di Dashboard Fanara Laundry
+          </p>
+        </div>
       </div>
 
       {/* SECTION 1: STATISTIK OMZET & TOTAL TRANSAKSI */}
