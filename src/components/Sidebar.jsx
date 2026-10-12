@@ -10,58 +10,65 @@ import {
   LogOut,
   WashingMachine,
   House,
+  CircleUserRound,
 } from "lucide-react";
 
 const menu = [
+  { nama: "Dashboard", path: "/dashboard", icon: House },
+  { nama: "Order", path: "/order", icon: ShoppingBag },
+  { nama: "Pesan Online", path: "/pesan-online", icon: Smartphone },
+  { nama: "Customer", path: "/customer", icon: Users },
+  { nama: "Layanan", path: "/layanan", icon: FlaskConical },
+  { nama: "Pengeluaran", path: "/pengeluaran", icon: Wallet },
+  { nama: "Laporan", path: "/laporan", icon: FileBarChart },
+  { nama: "User", path: "/users", icon: UserRound },
   {
-    nama: "Dashboard",
-    path: "/dashboard",
-    icon: House,
-  },
-  {
-    nama: "Order",
-    path: "/order",
-    icon: ShoppingBag,
-  },
-  {
-    nama: "Pesan Online",
-    path: "/pesan-online",
-    icon: Smartphone,
-  },
-  {
-    nama: "Customer",
-    path: "/customer",
-    icon: Users,
-  },
-  {
-    nama: "Layanan",
-    path: "/layanan",
-    icon: FlaskConical,
-  },
-  {
-    nama: "Pengeluaran",
-    path: "/pengeluaran",
-    icon: Wallet,
-  },
-  {
-    nama: "Laporan",
-    path: "/laporan",
-    icon: FileBarChart,
-  },
-  {
-    nama: "User",
-    path: "/users",
-    icon: UserRound,
+    nama: "Profile", path: "/profile", icon: CircleUserRound,
   },
 ];
 
 export default function Sidebar() {
   const navigate = useNavigate();
 
+  // Ambil user yang tersimpan saat login
+  let user = {};
+
+  try {
+    user = JSON.parse(localStorage.getItem("user") || "{}");
+  } catch {
+    user = {};
+  }
+
+  const role = (user.role || "").toLowerCase();
+
+  // Filter menu berdasarkan role
+  const allowedMenus = menu.filter((m) => {
+    if (role === "owner") {
+      return true;
+    }
+
+    if (role === "admin") {
+      return m.path !== "/laporan";
+    }
+
+    if (role === "kasir") {
+      return [
+        "/dashboard",
+        "/order",
+        "/pesan-online",
+        "/customer",
+        "/layanan",
+        "/profile",
+      ].includes(m.path);
+    }
+
+    return false;
+  });
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -70,10 +77,7 @@ export default function Sidebar() {
         {/* Logo & Brand Header */}
         <div className="p-6 border-b border-sky-400/30 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-md border border-white/20 shrink-0">
-            <WashingMachine
-              size={24}
-              strokeWidth={1.8}
-            />
+            <WashingMachine size={24} strokeWidth={1.8} />
           </div>
 
           <div>
@@ -93,7 +97,7 @@ export default function Sidebar() {
             Menu Utama
           </div>
 
-          {menu.map((m) => {
+          {allowedMenus.map((m) => {
             const Icon = m.icon;
 
             return (
@@ -101,10 +105,9 @@ export default function Sidebar() {
                 key={m.path}
                 to={m.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                    isActive
-                      ? "bg-white text-sky-600 shadow-md shadow-sky-900/10"
-                      : "text-white/90 hover:bg-white/10 hover:text-white"
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive
+                    ? "bg-white text-sky-600 shadow-md shadow-sky-900/10"
+                    : "text-white/90 hover:bg-white/10 hover:text-white"
                   }`
                 }
               >
@@ -113,11 +116,9 @@ export default function Sidebar() {
                     <Icon
                       size={20}
                       strokeWidth={1.8}
-                      className={`shrink-0 transition-colors ${
-                        isActive ? "text-sky-600" : "text-sky-100"
-                      }`}
+                      className={`shrink-0 transition-colors ${isActive ? "text-sky-600" : "text-sky-100"
+                        }`}
                     />
-
                     <span>{m.nama}</span>
                   </>
                 )}
@@ -133,12 +134,7 @@ export default function Sidebar() {
           onClick={handleLogout}
           className="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-rose-600 bg-white hover:bg-rose-50 border border-rose-100 rounded-xl transition-all duration-200 shadow-sm"
         >
-          <LogOut
-            size={16}
-            strokeWidth={2}
-            className="text-rose-500"
-          />
-
+          <LogOut size={16} strokeWidth={2} className="text-rose-500" />
           <span>Log out</span>
         </button>
       </div>
