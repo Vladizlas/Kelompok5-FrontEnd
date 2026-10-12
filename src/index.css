@@ -8,3 +8,4 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   filter: invert(45%) sepia(90%) saturate(1000%) hue-rotate(170deg);
 }
+
