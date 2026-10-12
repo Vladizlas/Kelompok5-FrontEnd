@@ -437,6 +437,7 @@ function Order() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-sky-50/50 border-b border-sky-100 text-sky-900 text-[11px] font-bold tracking-wider uppercase">
+                <th className="py-3.5 px-4 w-28">No</th>
                 <th className="py-3.5 px-4 w-28">Invoice</th>
                 <th className="py-3.5 px-4 w-32">Tanggal</th>
                 <th className="py-3.5 px-4 w-36">Pelanggan</th>
@@ -462,8 +463,11 @@ function Order() {
                   </td>
                 </tr>
               ) : (
-                orders.map((order) => (
+                orders.map((order, index) => (
                   <tr key={order.id} className="hover:bg-sky-50/20 transition duration-150">
+                    <td className="py-4 px-4 font-mono text-xs font-bold text-sky-600 whitespace-nowrap">
+                    {index + 1}
+                    </td>
                     <td className="py-4 px-4 font-mono text-xs font-bold text-sky-600 whitespace-nowrap">
                       {invoiceNo(order.id)}
                     </td>

@@ -25,13 +25,27 @@ function Customer() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // =========================================================
-  // FETCH
-  // =========================================================
-
+  // ========================================
+  // FETCH DATA
+  // ========================================
   const applyError = (err) => {
     console.error(err);
-    setError(err.response?.data?.message || "Gagal mengambil data customer");
+    setError(
+      err.response?.data?.message ||
+        "Gagal mengambil data customer"
+    );
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const result = await getCustomers();
+      setCustomers(result.data || []);
+      setError("");
+    } catch (err) {
+      applyError(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -55,30 +69,17 @@ function Customer() {
     };
   }, []);
 
-  const fetchCustomers = async () => {
-    try {
-      const result = await getCustomers();
-      setCustomers(result.data || []);
-      setError("");
-    } catch (err) {
-      applyError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleRetry = () => {
     setLoading(true);
     fetchCustomers();
   };
 
-  // =========================================================
+  // ========================================
   // MODAL
-  // =========================================================
-
+  // ========================================
   const handleOpenCreate = () => {
     setEditing(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm });
     setFormError("");
     setShowModal(true);
   };
@@ -86,8 +87,8 @@ function Customer() {
   const handleOpenEdit = (customer) => {
     setEditing(customer);
     setForm({
-      name: customer.name,
-      phone: customer.phone,
+      name: customer.name || "",
+      phone: customer.phone || "",
       address: customer.address || "",
     });
     setFormError("");
@@ -95,24 +96,26 @@ function Customer() {
   };
 
   const handleCloseModal = () => {
+    if (saving) return;
+
     setShowModal(false);
     setEditing(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm });
     setFormError("");
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  // =========================================================
-  // SUBMIT
-  // =========================================================
-
+  // ========================================
+  // CREATE / UPDATE
+  // ========================================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -142,22 +145,26 @@ function Customer() {
         await createCustomer(payload);
       }
 
-      handleCloseModal();
+      setShowModal(false);
+      setEditing(null);
+      setForm({ ...emptyForm });
+
       await fetchCustomers();
     } catch (err) {
       console.error(err);
+
       setFormError(
-        err.response?.data?.message || "Gagal menyimpan customer"
+        err.response?.data?.message ||
+          "Gagal menyimpan customer"
       );
     } finally {
       setSaving(false);
     }
   };
 
-  // =========================================================
+  // ========================================
   // DELETE
-  // =========================================================
-
+  // ========================================
   const handleDelete = async (customer) => {
     const confirmed = window.confirm(
       `Yakin ingin menghapus customer "${customer.name}"?`
@@ -170,34 +177,41 @@ function Customer() {
       await fetchCustomers();
     } catch (err) {
       console.error(err);
-      alert(
-        err.response?.data?.message || "Gagal menghapus customer"
+
+      window.alert(
+        err.response?.data?.message ||
+          "Gagal menghapus customer"
       );
     }
   };
 
-  // =========================================================
-  // FILTER
-  // =========================================================
-
+  // ========================================
+  // SEARCH
+  // ========================================
   const keyword = search.trim().toLowerCase();
 
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.name.toLowerCase().includes(keyword) ||
-      c.phone.toLowerCase().includes(keyword)
-  );
+  const filteredCustomers = customers.filter((customer) => {
+    const name = (customer.name || "").toLowerCase();
+    const phone = (customer.phone || "").toLowerCase();
 
-  // =========================================================
-  // RENDER (LATAR BELAKANG PUTIH & HEADER SKYTBLUE)
-  // =========================================================
+    return (
+      name.includes(keyword) ||
+      phone.includes(keyword)
+    );
+  });
 
+  // ========================================
+  // RENDER
+  // ========================================
   return (
     <div className="w-full min-h-screen bg-white p-6 lg:p-8 space-y-6 text-slate-800">
-      {/* HEADER BANNER */}
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-500/15 text-white">
         <div>
-          <h1 className="text-2xl font-black tracking-tight">Pelanggan</h1>
+          <h1 className="text-2xl font-black tracking-tight">
+            Pelanggan
+          </h1>
+
           <p className="text-xs font-medium text-sky-100 mt-1">
             Kelola data pelanggan Fanara Laundry
           </p>
@@ -208,8 +222,18 @@ function Customer() {
           onClick={handleOpenCreate}
           className="bg-white text-sky-600 hover:bg-sky-50 font-bold px-4 py-2.5 rounded-xl shadow-sm transition duration-200 text-xs flex items-center justify-center gap-2"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Tambah Customer
         </button>
@@ -217,11 +241,14 @@ function Customer() {
 
       {/* ERROR */}
       {error && (
-        <div role="alert" className="alert alert-error shadow-sm rounded-xl">
-          <svg className="w-6 h-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="flex-1 text-sm font-medium">{error}</span>
+        <div
+          role="alert"
+          className="alert alert-error shadow-sm rounded-xl"
+        >
+          <span className="flex-1 text-sm font-medium">
+            {error}
+          </span>
+
           <button
             type="button"
             onClick={handleRetry}
@@ -232,9 +259,9 @@ function Customer() {
         </div>
       )}
 
-      {/* CONTAINER TABLE & SEARCH */}
+      {/* TABLE CONTAINER */}
       <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden p-6 space-y-4">
-        {/* HEADER TABLE & SEARCH INPUT */}
+        {/* SEARCH */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="relative w-full sm:w-80">
             <svg
@@ -243,8 +270,14 @@ function Customer() {
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
+
             <input
               type="text"
               value={search}
@@ -264,36 +297,68 @@ function Customer() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-sky-50/50 border-b border-sky-100 text-sky-900 text-[11px] font-bold tracking-wider uppercase">
-                <th className="py-3.5 px-4 w-16">ID</th>
-                <th className="py-3.5 px-4">Nama</th>
-                <th className="py-3.5 px-4">No Telp</th>
-                <th className="py-3.5 px-4">Alamat</th>
-                <th className="py-3.5 px-4 w-32 text-center">Aksi</th>
+                <th className="py-3.5 px-4 w-16">
+                  No
+                </th>
+                <th className="py-3.5 px-4">
+                  Nama
+                </th>
+                <th className="py-3.5 px-4">
+                  No Telp
+                </th>
+                <th className="py-3.5 px-4">
+                  Alamat
+                </th>
+                <th className="py-3.5 px-4 w-32 text-center">
+                  Aksi
+                </th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-100 text-sm">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-12 text-sky-600">
-                    <span className="loading loading-spinner loading-md text-sky-500"></span>
+                  <td
+                    colSpan={5}
+                    className="text-center py-12 text-sky-600"
+                  >
+                    <span className="loading loading-spinner loading-md text-sky-500" />
                   </td>
                 </tr>
               ) : filteredCustomers.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-12 text-slate-400 font-medium text-xs">
+                  <td
+                    colSpan={5}
+                    className="text-center py-12 text-slate-400 font-medium text-xs"
+                  >
                     {customers.length === 0
                       ? "Belum ada data customer."
                       : "Customer tidak ditemukan."}
                   </td>
                 </tr>
               ) : (
-                filteredCustomers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-sky-50/20 transition duration-150">
-                    <td className="py-4 px-4 font-mono text-xs font-bold text-sky-600">#{customer.id}</td>
-                    <td className="py-4 px-4 font-bold text-slate-800">{customer.name}</td>
-                    <td className="py-4 px-4 text-xs font-medium text-slate-600 font-mono">{customer.phone}</td>
-                    <td className="py-4 px-4 text-xs text-slate-600">{customer.address || "-"}</td>
+                filteredCustomers.map((customer, index) => (
+                  <tr
+                    key={customer.id}
+                    className="hover:bg-sky-50/20 transition duration-150"
+                  >
+                    {/* NOMOR URUT TAMPILAN */}
+                    <td className="py-4 px-4 font-mono text-xs font-bold text-sky-600">
+                      {index + 1}
+                    </td>
+
+                    <td className="py-4 px-4 font-bold text-slate-800">
+                      {customer.name}
+                    </td>
+
+                    <td className="py-4 px-4 text-xs font-medium text-slate-600 font-mono">
+                      {customer.phone}
+                    </td>
+
+                    <td className="py-4 px-4 text-xs text-slate-600">
+                      {customer.address || "-"}
+                    </td>
+
                     <td className="py-4 px-4 text-center whitespace-nowrap">
                       <div className="flex justify-center items-center gap-1.5">
                         <button
@@ -327,55 +392,87 @@ function Customer() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md overflow-hidden my-8">
             <div className="bg-sky-500 text-white px-6 py-4 flex items-center justify-between">
               <h2 className="text-base font-bold">
-                {editing ? "Edit Customer" : "Tambah Customer Baru"}
+                {editing
+                  ? "Edit Customer"
+                  : "Tambah Customer Baru"}
               </h2>
-              <button onClick={handleCloseModal} className="text-white/80 hover:text-white font-bold text-xl leading-none">
+
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                disabled={saving}
+                aria-label="Tutup modal"
+                className="text-white/80 hover:text-white font-bold text-xl leading-none disabled:opacity-50"
+              >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 space-y-4"
+            >
               {formError && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2.5 rounded-xl text-xs font-medium">
+                <div
+                  role="alert"
+                  className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-2.5 rounded-xl text-xs font-medium"
+                >
                   {formError}
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="customer-name"
+                  className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Nama Pelanggan
                 </label>
+
                 <input
+                  id="customer-name"
                   type="text"
                   name="name"
                   value={form.name}
                   onChange={handleChange}
                   maxLength={100}
+                  required
                   placeholder="Nama pelanggan"
                   className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="customer-phone"
+                  className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   No Telp
                 </label>
+
                 <input
+                  id="customer-phone"
                   type="tel"
                   name="phone"
                   value={form.phone}
                   onChange={handleChange}
                   maxLength={20}
+                  required
                   placeholder="08xxxxxxxxxx"
                   className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="customer-address"
+                  className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Alamat
                 </label>
+
                 <textarea
+                  id="customer-address"
                   name="address"
                   value={form.address}
                   onChange={handleChange}
@@ -389,7 +486,8 @@ function Customer() {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
+                  disabled={saving}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition disabled:opacity-50"
                 >
                   Batal
                 </button>
@@ -399,13 +497,11 @@ function Customer() {
                   disabled={saving}
                   className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-sm disabled:opacity-50"
                 >
-                  {saving ? (
-                    <span className="loading loading-spinner loading-xs"></span>
-                  ) : editing ? (
-                    "Update"
-                  ) : (
-                    "Simpan"
-                  )}
+                  {saving
+                    ? "Menyimpan..."
+                    : editing
+                      ? "Update"
+                      : "Simpan"}
                 </button>
               </div>
             </form>
