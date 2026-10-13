@@ -132,6 +132,7 @@ const Users = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-sky-50/50 border-b border-sky-100 text-sky-900 text-[11px] font-bold tracking-wider uppercase">
+                <th className="py-3.5 px-4 font-semibold">No</th>
                 <th className="py-3.5 px-4 font-semibold">NAMA</th>
                 <th className="py-3.5 px-4 font-semibold">EMAIL</th>
                 <th className="py-3.5 px-4 font-semibold">ROLE</th>
@@ -162,11 +163,14 @@ const Users = () => {
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
+                users.map((user, index) => (
                   <tr
                     key={user.id}
                     className="hover:bg-sky-50/20 transition duration-150"
                   >
+                    <td className="py-4 px-4  text-slate-800">
+                      {index + 1}
+                    </td>
                     <td className="py-4 px-4 font-bold text-slate-800">
                       {user.name}
                     </td>

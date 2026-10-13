@@ -288,9 +288,9 @@ function Customer() {
                   </td>
                 </tr>
               ) : (
-                filteredCustomers.map((customer) => (
+                filteredCustomers.map((customer, index) => (
                   <tr key={customer.id} className="hover:bg-sky-50/20 transition duration-150">
-                    <td className="py-4 px-4 font-mono text-xs font-bold text-sky-600">#{customer.id}</td>
+                    <td className="py-4 px-4 font-mono text-xs font-bold text-sky-600">{index + 1}</td>
                     <td className="py-4 px-4 font-bold text-slate-800">{customer.name}</td>
                     <td className="py-4 px-4 text-xs font-medium text-slate-600 font-mono">{customer.phone}</td>
                     <td className="py-4 px-4 text-xs text-slate-600">{customer.address || "-"}</td>
