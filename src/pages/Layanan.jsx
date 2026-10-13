@@ -617,7 +617,7 @@ function Layanan() {
             </form>
           </div>
         </div>
-      )}
+      )}    
 
       {/* MODAL LAYANAN */}
       {showServiceModal && (
