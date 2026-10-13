@@ -307,7 +307,7 @@ function Home() {
               onClick={() => setModal("order")}
               className="bg-sky-500 hover:bg-sky-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-sm transition inline-block mt-2"
             >
-              Pesan Pesanan Sekarang
+              Pesan Sekarang
             </button>
           </div>
 

@@ -168,7 +168,7 @@ const Users = () => {
                     key={user.id}
                     className="hover:bg-sky-50/20 transition duration-150"
                   >
-                    <td className="py-4 px-4  text-slate-800">
+                    <td className="py-4 px-4 text-sky-600">
                       {index + 1}
                     </td>
                     <td className="py-4 px-4 font-bold text-slate-800">

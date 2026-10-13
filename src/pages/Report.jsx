@@ -392,6 +392,7 @@ function Report() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="border-b border-sky-100 bg-sky-50/40 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        <th className="py-3.5 px-6">No</th>
                                         <th className="py-3.5 px-6">Invoice</th>
                                         <th className="py-3.5 px-6">Tanggal</th>
                                         <th className="py-3.5 px-6">Pelanggan</th>
@@ -408,7 +409,7 @@ function Report() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredOrders.map((order) => {
+                                        filteredOrders.map((order, index) => {
                                             const amountPaid = getAmountPaid(order);
 
                                             return (
@@ -416,6 +417,9 @@ function Report() {
                                                     key={order.id}
                                                     className="hover:bg-sky-50/30 transition-colors"
                                                 >
+                                                    <td className="py-3.5 px-6 text-sky-600">
+                                                        {index + 1}
+                                                    </td>
                                                     <td className="py-3.5 px-6 font-mono text-xs font-bold text-sky-600">
                                                         INV-{String(order.id).padStart(4, "0")}
                                                     </td>
